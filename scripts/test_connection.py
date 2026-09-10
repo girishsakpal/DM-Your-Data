@@ -1,3 +1,10 @@
+"""
+Run this after `docker compose up -d` and `ollama pull <model>` to confirm
+your Phase 0 setup is working before moving to Phase 1.
+
+Usage:
+    python scripts/test_connection.py
+"""
 import sys
 import os
 
