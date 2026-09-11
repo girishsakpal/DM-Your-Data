@@ -51,9 +51,9 @@ dm-your-data/
 ## Roadmap
 
 - [x] Phase 0 — Setup & scoping
-- [ ] Phase 1 — Core text-to-SQL pipeline
-- [ ] Phase 2 — Semantic search layer
-- [ ] Phase 3 — Query router
+- [x] Phase 1 — Core text-to-SQL pipeline
+- [x] Phase 2 — Semantic search layer
+- [x] Phase 3 — Query router
 - [ ] Phase 4 — Data science layer (profiling, outlier detection)
 - [ ] Phase 5 — Evaluation harness
 - [ ] Phase 6 — Frontend/UX polish
