@@ -1,0 +1,276 @@
+{
+  "summary": {
+    "timestamp": "2026-09-14T07:56:19.000367+00:00",
+    "sql_model": "qwen2.5-coder:3b",
+    "router_model": "llama3.2:3b",
+    "embedding_model": "all-MiniLM-L6-v2",
+    "total_cases": 14,
+    "routing_accuracy": 0.857,
+    "sql_execution_accuracy": 1.0,
+    "semantic_avg_precision": 0.5,
+    "hybrid_avg_precision": 0.75
+  },
+  "results": [
+    {
+      "id": "sql_01",
+      "question": "How many reviews are there in total?",
+      "type": "sql",
+      "route_correct": true,
+      "actual_route": "sql",
+      "sql_correct": true,
+      "generated_sql": "SELECT COUNT(*) FROM product_reviews",
+      "expected_sql": "SELECT COUNT(*) FROM product_reviews;",
+      "generated_rows": [
+        [
+          8
+        ]
+      ],
+      "expected_rows": [
+        [
+          8
+        ]
+      ]
+    },
+    {
+      "id": "sql_02",
+      "question": "How many reviews came from the West region?",
+      "type": "sql",
+      "route_correct": true,
+      "actual_route": "sql",
+      "sql_correct": true,
+      "generated_sql": "SELECT COUNT(*) FROM product_reviews WHERE region = 'West';",
+      "expected_sql": "SELECT COUNT(*) FROM product_reviews WHERE region = 'West';",
+      "generated_rows": [
+        [
+          2
+        ]
+      ],
+      "expected_rows": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "id": "sql_03",
+      "question": "What is the average price by category?",
+      "type": "sql",
+      "route_correct": true,
+      "actual_route": "sql",
+      "sql_correct": true,
+      "generated_sql": "SELECT category, AVG(price) AS avg_price FROM product_reviews GROUP BY category;",
+      "expected_sql": "SELECT category, AVG(price) FROM product_reviews GROUP BY category;",
+      "generated_rows": [
+        [
+          "Electronics",
+          "1649.0000000000000000"
+        ],
+        [
+          "Fitness",
+          "2399.0000000000000000"
+        ]
+      ],
+      "expected_rows": [
+        [
+          "Electronics",
+          "1649.0000000000000000"
+        ],
+        [
+          "Fitness",
+          "2399.0000000000000000"
+        ]
+      ]
+    },
+    {
+      "id": "sql_04",
+      "question": "How many reviews have a rating of 5?",
+      "type": "sql",
+      "route_correct": true,
+      "actual_route": "sql",
+      "sql_correct": true,
+      "generated_sql": "SELECT COUNT(*) AS num_reviews FROM product_reviews WHERE rating = 5;",
+      "expected_sql": "SELECT COUNT(*) FROM product_reviews WHERE rating = 5;",
+      "generated_rows": [
+        [
+          2
+        ]
+      ],
+      "expected_rows": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "id": "sql_05",
+      "question": "What is the maximum price in the dataset?",
+      "type": "sql",
+      "route_correct": true,
+      "actual_route": "sql",
+      "sql_correct": true,
+      "generated_sql": "SELECT MAX(price) FROM product_reviews",
+      "expected_sql": "SELECT MAX(price) FROM product_reviews;",
+      "generated_rows": [
+        [
+          "3499.00"
+        ]
+      ],
+      "expected_rows": [
+        [
+          "3499.00"
+        ]
+      ]
+    },
+    {
+      "id": "sql_06",
+      "question": "What is the average rating for Wireless Mouse?",
+      "type": "sql",
+      "route_correct": true,
+      "actual_route": "sql",
+      "sql_correct": true,
+      "generated_sql": "SELECT AVG(rating) AS avg_rating FROM product_reviews WHERE product_name = 'Wireless Mouse'",
+      "expected_sql": "SELECT AVG(rating) FROM product_reviews WHERE product_name = 'Wireless Mouse';",
+      "generated_rows": [
+        [
+          "3.0000000000000000"
+        ]
+      ],
+      "expected_rows": [
+        [
+          "3.0000000000000000"
+        ]
+      ]
+    },
+    {
+      "id": "sql_07",
+      "question": "How many distinct product categories are there?",
+      "type": "sql",
+      "route_correct": true,
+      "actual_route": "sql",
+      "sql_correct": true,
+      "generated_sql": "SELECT COUNT(DISTINCT category) FROM product_reviews;",
+      "expected_sql": "SELECT COUNT(DISTINCT category) FROM product_reviews;",
+      "generated_rows": [
+        [
+          2
+        ]
+      ],
+      "expected_rows": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "id": "sql_08",
+      "question": "How many reviews have a rating below 3?",
+      "type": "sql",
+      "route_correct": true,
+      "actual_route": "sql",
+      "sql_correct": true,
+      "generated_sql": "SELECT COUNT(*) AS num_reviews FROM product_reviews WHERE rating < 3;",
+      "expected_sql": "SELECT COUNT(*) FROM product_reviews WHERE rating < 3;",
+      "generated_rows": [
+        [
+          3
+        ]
+      ],
+      "expected_rows": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "id": "sem_01",
+      "question": "reviews expressing frustration",
+      "type": "semantic",
+      "route_correct": true,
+      "actual_route": "semantic",
+      "precision": 1.0,
+      "recall": 0.5,
+      "returned_ids": [
+        4
+      ],
+      "relevant_ids": [
+        2,
+        4
+      ]
+    },
+    {
+      "id": "sem_02",
+      "question": "products with battery life issues",
+      "type": "semantic",
+      "route_correct": false,
+      "actual_route": "sql",
+      "precision": 1.0,
+      "recall": 0.5,
+      "returned_ids": [
+        5
+      ],
+      "relevant_ids": [
+        1,
+        5
+      ]
+    },
+    {
+      "id": "sem_03",
+      "question": "items that arrived damaged",
+      "type": "semantic",
+      "route_correct": false,
+      "actual_route": "sql",
+      "precision": 0.0,
+      "recall": 0.0,
+      "returned_ids": [],
+      "relevant_ids": [
+        4
+      ]
+    },
+    {
+      "id": "sem_04",
+      "question": "reviews praising fast shipping",
+      "type": "semantic",
+      "route_correct": true,
+      "actual_route": "semantic",
+      "precision": 0.0,
+      "recall": 0.0,
+      "returned_ids": [],
+      "relevant_ids": [
+        6
+      ]
+    },
+    {
+      "id": "hyb_01",
+      "question": "frustrated customers in the North region",
+      "type": "hybrid",
+      "route_correct": true,
+      "actual_route": "hybrid",
+      "precision": 1.0,
+      "recall": 1.0,
+      "returned_ids": [
+        2
+      ],
+      "relevant_ids": [
+        2
+      ],
+      "filter_sql": "region = 'North'"
+    },
+    {
+      "id": "hyb_02",
+      "question": "battery complaints for products under 1000",
+      "type": "hybrid",
+      "route_correct": true,
+      "actual_route": "hybrid",
+      "precision": 0.5,
+      "recall": 1.0,
+      "returned_ids": [
+        1,
+        2
+      ],
+      "relevant_ids": [
+        1
+      ],
+      "filter_sql": "price < 1000"
+    }
+  ]
+}
