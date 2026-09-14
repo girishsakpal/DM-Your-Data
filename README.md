@@ -54,7 +54,7 @@ dm-your-data/
 - [x] Phase 1 — Core text-to-SQL pipeline
 - [x] Phase 2 — Semantic search layer
 - [x] Phase 3 — Query router
-- [ ] Phase 4 — Data science layer (profiling, outlier detection)
-- [ ] Phase 5 — Evaluation harness
+- [x] Phase 4 — Data science layer (profiling, outlier detection)
+- [x] Phase 5 — Evaluation harness
 - [ ] Phase 6 — Frontend/UX polish
 - [ ] Phase 7 — Documentation & report

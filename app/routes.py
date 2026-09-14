@@ -4,6 +4,9 @@ from app.nlp.sql_executor import generate_and_execute
 from app.embeddings.semantic_search import semantic_search
 from app.nlp.query_router import classify, ROUTE_SQL, ROUTE_SEMANTIC, ROUTE_HYBRID
 from app.nlp.hybrid import run_hybrid_query
+from app.profiling.profiler import profile_database, profile_table
+from app.profiling.outliers import detect_outliers, detect_all_outliers
+from app.eval.runner import run_full_eval, save_run
 
 bp = Blueprint("main", __name__)
 
@@ -117,3 +120,66 @@ def ask():
             "route_method": routing["method"],
             "error": str(e),
         }), 500
+
+
+@bp.route("/profile")
+def profile():
+    """
+    Phase 4: live data profiling. Optional ?table=<name> to profile just one
+    table instead of the whole database (profiling every table can be slow
+    on larger datasets — this endpoint always runs live, unlike the cached
+    report schema_context.py reads for SQL generation).
+    """
+    table = request.args.get("table")
+    try:
+        if table:
+            return jsonify(profile_table(table)), 200
+        return jsonify(profile_database()), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@bp.route("/outliers")
+def outliers():
+    """
+    Phase 4: statistical outlier detection. Query params:
+      table (required), column (optional — omit to check all numeric columns),
+      method ("zscore" default, or "iqr")
+
+    Examples:
+      /outliers?table=product_reviews&column=price
+      /outliers?table=product_reviews&method=iqr
+    """
+    table = request.args.get("table")
+    column = request.args.get("column")
+    method = request.args.get("method", "zscore")
+
+    if not table:
+        return jsonify({"success": False, "error": "Missing required 'table' query param."}), 400
+
+    try:
+        if column:
+            return jsonify(detect_outliers(table, column, method=method)), 200
+        return jsonify(detect_all_outliers(table, method=method)), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@bp.route("/eval", methods=["POST"])
+def eval_endpoint():
+    """
+    Phase 5: runs the full evaluation suite against tests/eval_dataset.json
+    and returns the summary + per-case results. Also saves the run to
+    data/eval_runs/ and appends to data/eval_history.csv, same as
+    scripts/run_eval.py — this just makes it triggerable over HTTP too.
+
+    Warning: this makes a real LLM call (and DB query) per test case, so it
+    is not fast — expect it to take a while depending on your dataset size.
+    """
+    try:
+        eval_output = run_full_eval()
+        run_path = save_run(eval_output)
+        eval_output["saved_to"] = run_path
+        return jsonify(eval_output), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500

@@ -1,0 +1,94 @@
+{
+  "sql_cases": [
+    {
+      "id": "sql_01",
+      "question": "How many reviews are there in total?",
+      "expected_route": "sql",
+      "expected_sql": "SELECT COUNT(*) FROM product_reviews;"
+    },
+    {
+      "id": "sql_02",
+      "question": "How many reviews came from the West region?",
+      "expected_route": "sql",
+      "expected_sql": "SELECT COUNT(*) FROM product_reviews WHERE region = 'West';"
+    },
+    {
+      "id": "sql_03",
+      "question": "What is the average price by category?",
+      "expected_route": "sql",
+      "expected_sql": "SELECT category, AVG(price) FROM product_reviews GROUP BY category;"
+    },
+    {
+      "id": "sql_04",
+      "question": "How many reviews have a rating of 5?",
+      "expected_route": "sql",
+      "expected_sql": "SELECT COUNT(*) FROM product_reviews WHERE rating = 5;"
+    },
+    {
+      "id": "sql_05",
+      "question": "What is the maximum price in the dataset?",
+      "expected_route": "sql",
+      "expected_sql": "SELECT MAX(price) FROM product_reviews;"
+    },
+    {
+      "id": "sql_06",
+      "question": "What is the average rating for Wireless Mouse?",
+      "expected_route": "sql",
+      "expected_sql": "SELECT AVG(rating) FROM product_reviews WHERE product_name = 'Wireless Mouse';"
+    },
+    {
+      "id": "sql_07",
+      "question": "How many distinct product categories are there?",
+      "expected_route": "sql",
+      "expected_sql": "SELECT COUNT(DISTINCT category) FROM product_reviews;"
+    },
+    {
+      "id": "sql_08",
+      "question": "How many reviews have a rating below 3?",
+      "expected_route": "sql",
+      "expected_sql": "SELECT COUNT(*) FROM product_reviews WHERE rating < 3;"
+    }
+  ],
+
+  "semantic_cases": [
+    {
+      "id": "sem_01",
+      "question": "reviews expressing frustration",
+      "expected_route": "semantic",
+      "relevant_ids": [2, 4]
+    },
+    {
+      "id": "sem_02",
+      "question": "products with battery life issues",
+      "expected_route": "semantic",
+      "relevant_ids": [1, 5]
+    },
+    {
+      "id": "sem_03",
+      "question": "items that arrived damaged",
+      "expected_route": "semantic",
+      "relevant_ids": [4]
+    },
+    {
+      "id": "sem_04",
+      "question": "reviews praising fast shipping",
+      "expected_route": "semantic",
+      "relevant_ids": [6]
+    }
+  ],
+
+  "hybrid_cases": [
+    {
+      "id": "hyb_01",
+      "question": "frustrated customers in the North region",
+      "expected_route": "hybrid",
+      "relevant_ids": [2]
+    },
+    {
+      "id": "hyb_02",
+      "question": "battery complaints for products under 1000",
+      "expected_route": "hybrid",
+      "relevant_ids": [1]
+    }
+  ]
+}
