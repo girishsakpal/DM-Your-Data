@@ -1,24 +1,477 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>DM Your Data</title>
-    <style>
-        body { font-family: system-ui, sans-serif; max-width: 640px; margin: 80px auto; color: #222; }
-        h1 { margin-bottom: 4px; }
-        p.sub { color: #666; margin-top: 0; }
-        code { background: #f4f4f4; padding: 2px 6px; border-radius: 4px; }
-        ul { line-height: 1.8; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dm your data</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Archivo+Expanded:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --base:#F2F4F3;
+    --panel:#FBFCFB;
+    --ink:#16202B;
+    --muted:#6D7C89;
+    --hair:#D9DFDD;
+
+    /* The two lanes. These are load-bearing: every element inherits the
+       colour of whichever half of the system produced it. */
+    --structured:#2F6F5E;
+    --structured-wash:#E4EEEA;
+    --meaning:#6B4BA8;
+    --meaning-wash:#EBE6F4;
+
+    --warn:#9A5B2A;
+    --warn-wash:#F6EBE1;
+  }
+
+  *{box-sizing:border-box}
+
+  html{ -webkit-text-size-adjust:100%; }
+
+  body{
+    margin:0;
+    background:var(--base);
+    color:var(--ink);
+    font-family:'Archivo',system-ui,sans-serif;
+    font-size:16px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .wrap{max-width:1000px;margin:0 auto;padding:28px 24px 96px}
+
+  /* ---------- masthead ---------- */
+  .top{
+    display:flex;align-items:baseline;justify-content:space-between;
+    gap:16px;flex-wrap:wrap;
+    padding-bottom:14px;border-bottom:1px solid var(--hair);
+  }
+  .mark{
+    font-family:'Archivo Expanded','Archivo',sans-serif;
+    font-weight:700;font-size:15px;letter-spacing:.02em;margin:0;
+  }
+  .mark span{font-weight:500;color:var(--muted)}
+
+  .schema-strip{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;color:var(--muted);
+  }
+  .schema-strip b{color:var(--ink);font-weight:500}
+
+  /* ---------- ask ---------- */
+  .ask{padding:52px 0 8px;max-width:680px}
+  .ask h1{
+    font-family:'Archivo Expanded','Archivo',sans-serif;
+    font-weight:600;
+    font-size:clamp(28px,4.4vw,40px);
+    line-height:1.12;
+    letter-spacing:-.015em;
+    margin:0 0 10px;
+  }
+  .ask p{color:var(--muted);margin:0 0 26px;max-width:52ch}
+
+  .field{
+    display:flex;align-items:stretch;
+    background:var(--panel);
+    border:1.5px solid var(--ink);
+    border-radius:3px;
+  }
+  .field:focus-within{
+    outline:2px solid var(--structured);
+    outline-offset:2px;
+  }
+  .field input{
+    flex:1;min-width:0;
+    font:inherit;font-size:17px;color:var(--ink);
+    background:transparent;border:0;outline:0;
+    padding:15px 16px;
+  }
+  .field input::placeholder{color:#A7B2BB}
+  .field button{
+    font:inherit;font-weight:600;font-size:15px;
+    background:var(--ink);color:var(--base);
+    border:0;padding:0 22px;cursor:pointer;
+  }
+  .field button:hover{background:#0D1620}
+  .field button:disabled{background:var(--muted);cursor:progress}
+  .field button:focus-visible{outline:2px solid var(--structured);outline-offset:-4px}
+
+  .seeds{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}
+  .seeds button{
+    font:inherit;font-size:13px;color:var(--muted);
+    background:transparent;
+    border:1px solid var(--hair);border-radius:99px;
+    padding:5px 12px;cursor:pointer;
+  }
+  .seeds button:hover{border-color:var(--ink);color:var(--ink)}
+  .seeds button:focus-visible{outline:2px solid var(--structured);outline-offset:1px}
+
+  /* ---------- routing track (the hero) ---------- */
+  .track{
+    margin-top:44px;padding-top:22px;
+    border-top:1px solid var(--hair);
+  }
+  .track-head{
+    display:flex;justify-content:space-between;align-items:baseline;
+    font-size:13px;color:var(--muted);margin-bottom:18px;
+  }
+  .track-verdict{color:var(--ink);font-weight:600}
+  .track-verdict[data-lane="structured"]{color:var(--structured)}
+  .track-verdict[data-lane="meaning"]{color:var(--meaning)}
+
+  .lanes{display:grid;gap:11px}
+  .lane{display:grid;grid-template-columns:96px 1fr auto;align-items:center;gap:14px}
+  .lane-name{font-size:13.5px;color:var(--muted)}
+  .rail{position:relative;height:3px;background:var(--hair);border-radius:2px;overflow:hidden}
+  .rail i{
+    position:absolute;inset:0;
+    transform:scaleX(0);transform-origin:left;
+    transition:transform .5s cubic-bezier(.22,.7,.3,1);
+  }
+  .lane[data-on="1"] .rail i{transform:scaleX(1)}
+  .lane[data-lane="structured"] .rail i{background:var(--structured)}
+  .lane[data-lane="meaning"] .rail i{background:var(--meaning)}
+  .lane[data-on="1"] .lane-name{color:var(--ink)}
+  .lane-note{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;
+    color:var(--muted);opacity:0;transition:opacity .35s ease .28s;
+    text-align:right;min-width:74px;
+  }
+  .lane[data-on="1"] .lane-note{opacity:1}
+
+  /* ---------- panels ---------- */
+  .out{margin-top:40px;display:grid;gap:22px}
+
+  .panel{background:var(--panel);border:1px solid var(--hair);border-radius:4px}
+  .panel > h2{
+    font-size:13px;font-weight:600;margin:0;
+    padding:12px 16px;border-bottom:1px solid var(--hair);
+    display:flex;justify-content:space-between;align-items:center;gap:12px;
+  }
+  .panel > h2 em{
+    font-style:normal;font-weight:400;font-size:12px;color:var(--muted);
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .panel-body{padding:16px}
+
+  .panel[data-lane="structured"]{border-left:3px solid var(--structured)}
+  .panel[data-lane="structured"] > h2{background:var(--structured-wash);color:var(--structured)}
+  .panel[data-lane="meaning"]{border-left:3px solid var(--meaning)}
+  .panel[data-lane="meaning"] > h2{background:var(--meaning-wash);color:var(--meaning)}
+  .panel[data-lane="warn"]{border-left:3px solid var(--warn)}
+  .panel[data-lane="warn"] > h2{background:var(--warn-wash);color:var(--warn)}
+
+  pre.sql{
+    font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.65;
+    margin:0;white-space:pre-wrap;word-break:break-word;color:var(--ink);
+  }
+
+  .split{display:grid;gap:14px}
+  .split .bit{border-top:1px dashed var(--hair);padding-top:12px}
+  .split .bit:first-child{border-top:0;padding-top:0}
+  .bit-label{font-size:12px;color:var(--muted);margin-bottom:5px}
+  .bit code{font-family:'IBM Plex Mono',monospace;font-size:13px}
+
+  /* results table */
+  .scroll{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:13.5px}
+  th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--hair);white-space:nowrap}
+  th{
+    font-weight:600;font-size:12px;color:var(--muted);
+    position:sticky;top:0;background:var(--panel);
+  }
+  td{font-family:'IBM Plex Mono',monospace;font-size:12.5px}
+  tr:last-child td{border-bottom:0}
+
+  /* semantic matches */
+  .match{border-top:1px solid var(--hair);padding:14px 0}
+  .match:first-child{border-top:0;padding-top:0}
+  .match:last-child{padding-bottom:0}
+  .match-top{display:flex;justify-content:space-between;gap:14px;align-items:baseline}
+  .match-who{font-size:13.5px;font-weight:500}
+  .match-who small{font-weight:400;color:var(--muted);margin-left:14px;font-size:12.5px}
+  .match-text{margin:7px 0 10px;font-size:14.5px;max-width:62ch}
+  .meter{display:flex;align-items:center;gap:9px}
+  .meter-bar{width:110px;height:5px;background:var(--hair);border-radius:3px;overflow:hidden}
+  .meter-bar i{display:block;height:100%;background:var(--meaning);border-radius:3px}
+  .meter-num{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted)}
+
+  /* states */
+  .note{color:var(--muted);font-size:14px;margin:0}
+  .note code{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink)}
+
+  .hidden{display:none !important}
+
+  .foot{
+    margin-top:64px;padding-top:16px;border-top:1px solid var(--hair);
+    display:flex;gap:20px;flex-wrap:wrap;
+    font-size:13px;color:var(--muted);
+  }
+  .foot a{color:var(--muted)}
+  .foot a:hover{color:var(--ink)}
+
+  @media (max-width:620px){
+    .wrap{padding:20px 16px 72px}
+    .ask{padding-top:34px}
+    .field{flex-direction:column}
+    .field button{padding:13px}
+    .lane{grid-template-columns:80px 1fr;row-gap:5px}
+    .lane-note{grid-column:2;text-align:left}
+    th,td{white-space:normal}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important;animation:none !important}
+  }
+</style>
 </head>
 <body>
-    <h1>DM Your Data</h1>
-    <p class="sub">Phase 0 skeleton is live.</p>
-    <p>Sanity checks:</p>
-    <ul>
-        <li><a href="/health">/health</a> — confirms Flask can reach PostgreSQL</li>
-        <li><a href="/schema">/schema</a> — introspects the sample dataset's schema</li>
-    </ul>
-    <p>Natural language querying UI lands in Phase 6.</p>
+<div class="wrap">
+
+  <header class="top">
+    <p class="mark">dm your data <span>— hybrid query</span></p>
+    <p class="schema-strip" id="schemaStrip">reading schema…</p>
+  </header>
+
+  <section class="ask">
+    <h1>Ask your database a question.</h1>
+    <p>Type it the way you'd say it out loud. Questions that need exact numbers become SQL; questions about meaning become a vector search; some need both.</p>
+
+    <div class="field">
+      <input id="q" type="text" autocomplete="off"
+             placeholder="frustrated customers in the West region"
+             aria-label="Your question">
+      <button id="go" type="button">Ask</button>
+    </div>
+
+    <div class="seeds" id="seeds"></div>
+  </section>
+
+  <!-- the hero: which way the question was routed -->
+  <section class="track" aria-live="polite">
+    <div class="track-head">
+      <span>Routing</span>
+      <span class="track-verdict" id="verdict">waiting for a question</span>
+    </div>
+    <div class="lanes">
+      <div class="lane" data-lane="structured" id="laneSql" data-on="0">
+        <span class="lane-name">Structured</span>
+        <span class="rail"><i></i></span>
+        <span class="lane-note" id="noteSql">SQL</span>
+      </div>
+      <div class="lane" data-lane="meaning" id="laneSem" data-on="0">
+        <span class="lane-name">Meaning</span>
+        <span class="rail"><i></i></span>
+        <span class="lane-note" id="noteSem">vectors</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="out" id="out">
+    <div class="panel">
+      <h2>Results</h2>
+      <div class="panel-body">
+        <p class="note">Nothing asked yet. Pick one of the examples above, or write your own — try counting something, or describing a feeling you'd expect to find in a review.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <a href="/schema">schema</a>
+    <a href="/profile">profile</a>
+    <a href="/health">health</a>
+  </footer>
+
+</div>
+
+<script>
+const SEEDS = [
+  "What is the average price by category?",
+  "How many reviews came from the West region?",
+  "reviews expressing frustration",
+  "products with battery life issues",
+  "frustrated customers in the North region"
+];
+
+const qEl = document.getElementById('q');
+const goEl = document.getElementById('go');
+const outEl = document.getElementById('out');
+const verdictEl = document.getElementById('verdict');
+const laneSql = document.getElementById('laneSql');
+const laneSem = document.getElementById('laneSem');
+const noteSql = document.getElementById('noteSql');
+const noteSem = document.getElementById('noteSem');
+
+// seed chips are clickable, not decorative punctuation
+SEEDS.forEach(s => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.textContent = s;
+  b.onclick = () => { qEl.value = s; ask(); };
+  document.getElementById('seeds').appendChild(b);
+});
+
+function esc(s){
+  return String(s ?? '').replace(/[&<>"']/g, c => (
+    {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
+  ));
+}
+
+/* ---------- schema strip ---------- */
+fetch('/schema').then(r => r.json()).then(s => {
+  const tables = Object.keys(s).filter(t => t !== 'review_embeddings');
+  const txt = tables.map(t => `<b>${esc(t)}</b> ${s[t].length} cols`).join('&nbsp;&nbsp;&nbsp;');
+  document.getElementById('schemaStrip').innerHTML = txt || 'no tables found';
+}).catch(() => {
+  document.getElementById('schemaStrip').textContent = 'schema unavailable — is the database reachable?';
+});
+
+/* ---------- routing track ---------- */
+function setLanes(route, method){
+  const sql = (route === 'sql' || route === 'hybrid');
+  const sem = (route === 'semantic' || route === 'hybrid');
+  laneSql.dataset.on = sql ? '1' : '0';
+  laneSem.dataset.on = sem ? '1' : '0';
+  noteSql.textContent = sql ? 'generating SQL' : '—';
+  noteSem.textContent = sem ? 'cosine search' : '—';
+
+  const label = {sql:'Structured only', semantic:'Meaning only', hybrid:'Both lanes'}[route] || route;
+  verdictEl.textContent = `${label}, decided by ${method}`;
+  verdictEl.dataset.lane = route === 'hybrid' ? '' : (route === 'sql' ? 'structured' : 'meaning');
+}
+
+function resetLanes(msg){
+  laneSql.dataset.on = '0';
+  laneSem.dataset.on = '0';
+  verdictEl.textContent = msg;
+  verdictEl.dataset.lane = '';
+}
+
+/* ---------- renderers ---------- */
+function panel(lane, title, meta, bodyHtml){
+  return `<div class="panel"${lane ? ` data-lane="${lane}"` : ''}>
+    <h2>${esc(title)}${meta ? `<em>${esc(meta)}</em>` : ''}</h2>
+    <div class="panel-body">${bodyHtml}</div>
+  </div>`;
+}
+
+function tableHtml(cols, rows){
+  if(!rows.length) return `<p class="note">The query ran and matched nothing. Try widening it — a different region, or a lower rating threshold.</p>`;
+  return `<div class="scroll"><table>
+    <thead><tr>${cols.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map(r => `<tr>${r.map(v => `<td>${esc(v)}</td>`).join('')}</tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+function matchesHtml(rows){
+  if(!rows.length) return `<p class="note">No review landed close enough to count as a match. Rephrase using words a reviewer would actually write.</p>`;
+  return rows.map(r => {
+    // distance 0 = identical, 2 = opposite. Show closeness, which is what you judge.
+    const d = Number(r.distance);
+    const pct = Math.max(0, Math.min(100, (1 - d / 2) * 100));
+    return `<div class="match">
+      <div class="match-top">
+        <span class="match-who">${esc(r.product_name)}<small>${esc(r.rating)} out of 5</small><small>${esc(r.region)}</small></span>
+        <span class="meter">
+          <span class="meter-bar"><i style="width:${pct.toFixed(0)}%"></i></span>
+          <span class="meter-num">${d.toFixed(3)}</span>
+        </span>
+      </div>
+      <p class="match-text">${esc(r.review_text)}</p>
+    </div>`;
+  }).join('');
+}
+
+function render(data){
+  const route = data.route;
+  let html = '';
+
+  if(route === 'sql'){
+    if(data.success){
+      html += panel('structured', 'The SQL it wrote', `${data.attempts} attempt${data.attempts>1?'s':''}`,
+        `<pre class="sql">${esc(data.sql)}</pre>`);
+      html += panel('structured', 'Results', `${data.row_count} row${data.row_count===1?'':'s'}`,
+        tableHtml(data.columns, data.rows));
+    } else {
+      html += panel('warn', "That SQL didn't run", null,
+        `<pre class="sql">${esc(data.sql || '—')}</pre>
+         <p class="note" style="margin-top:12px">Postgres said: <code>${esc(data.error)}</code></p>
+         <p class="note" style="margin-top:8px">Name the column you mean and ask again — "average <em>price</em> by category" lands better than "average cost".</p>`);
+    }
+  }
+
+  else if(route === 'semantic'){
+    html += panel('meaning', 'Closest in meaning', `${data.result_count} of ${data.raw_result_count} kept`,
+      matchesHtml(data.results));
+  }
+
+  else if(route === 'hybrid'){
+    const bits = `<div class="split">
+      <div class="bit">
+        <div class="bit-label">Filtered on</div>
+        <code>${esc(data.filter_sql || 'nothing — no structured filter found')}</code>
+      </div>
+      <div class="bit">
+        <div class="bit-label">Then ranked by closeness to</div>
+        <code>${esc(data.semantic_query)}</code>
+      </div>
+    </div>`;
+    html += panel('structured', 'How it split the question', null, bits);
+    if(data.filter_error){
+      html += panel('warn', 'The filter was dropped', null,
+        `<p class="note">${esc(data.filter_error)}</p>
+         <p class="note" style="margin-top:8px">Results below ignore the filter and rank the whole table by meaning.</p>`);
+    }
+    html += panel('meaning', 'Closest in meaning', `${data.result_count} match${data.result_count===1?'':'es'}`,
+      matchesHtml(data.results));
+  }
+
+  outEl.innerHTML = html;
+}
+
+/* ---------- ask ---------- */
+async function ask(){
+  const question = qEl.value.trim();
+  if(!question) { qEl.focus(); return; }
+
+  goEl.disabled = true;
+  goEl.textContent = 'Asking';
+  resetLanes('working out where this goes…');
+  outEl.innerHTML = panel(null, 'Results', null,
+    `<p class="note">Routing the question, then running it. Local models take a few seconds.</p>`);
+
+  try{
+    const res = await fetch('/ask', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({question})
+    });
+    const data = await res.json();
+
+    if(data.route){
+      setLanes(data.route, data.route_method || '—');
+      render(data);
+    } else {
+      resetLanes('could not route this one');
+      outEl.innerHTML = panel('warn', 'Nothing ran', null,
+        `<p class="note">${esc(data.error || 'The server returned no route.')}</p>`);
+    }
+  } catch(err){
+    resetLanes('no answer from the server');
+    outEl.innerHTML = panel('warn', 'The server is not responding', null,
+      `<p class="note">${esc(err.message)}</p>
+       <p class="note" style="margin-top:8px">Check that <code>python run.py</code> is still running, and that Ollama is up.</p>`);
+  } finally {
+    goEl.disabled = false;
+    goEl.textContent = 'Ask';
+  }
+}
+
+goEl.addEventListener('click', ask);
+qEl.addEventListener('keydown', e => { if(e.key === 'Enter') ask(); });
+qEl.focus();
+</script>
 </body>
 </html>

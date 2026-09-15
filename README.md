@@ -32,17 +32,41 @@ foundation.
 dm-your-data/
 ├── app/
 │   ├── __init__.py       # Flask app factory
-│   ├── routes.py         # routes (health check, schema introspection)
+│   ├── routes.py         # routes (health check, schema introspection, /query, /semantic-query, /ask)
 │   ├── db/
 │   │   └── connection.py # DB engine + schema introspection
+│   ├── llm/
+│   │   └── ollama_client.py   # thin wrapper around the Ollama SDK
+│   ├── nlp/
+│   │   ├── schema_context.py  # formats schema + sample rows for LLM prompts
+│   │   ├── sql_generator.py   # prompt building + SQL extraction from LLM output
+│   │   ├── sql_executor.py    # validation, safe execution, retry-on-error
+│   │   ├── query_router.py    # heuristic + LLM classification (sql/semantic/hybrid)
+│   │   └── hybrid.py          # decompose -> SQL pre-filter -> semantic rank
+│   ├── embeddings/
+│   │   ├── embedder.py         # loads/caches the local embedding model
+│   │   └── semantic_search.py  # query embedding + pgvector similarity search (supports candidate_ids for hybrid)
+│   ├── profiling/
+│   │   ├── profiler.py         # per-column stats: nulls, cardinality, distributions
+│   │   └── outliers.py         # z-score and IQR statistical outlier detection
+│   ├── eval/
+│   │   ├── metrics.py          # execution-accuracy comparison + precision/recall
+│   │   └── runner.py           # runs the labeled dataset end-to-end, tracks history
 │   └── templates/
-│       └── index.html
+│       └── index.html      # the whole UI — one file, no build step
 ├── scripts/
 │   ├── init.sql              # DB schema + seed data
-│   ├── setup_db.sh           # creates role/DB, enables pgvector, runs init.sql
-│   └── test_connection.py    # sanity check script
-├── data/                  # place datasets here
-├── tests/                 # test suite (Phase 5 eval harness lands here)
+│   ├── test_connection.py    # Phase 0 sanity check script
+│   ├── test_phase1.py        # CLI tester for the text-to-SQL pipeline
+│   ├── ingest_embeddings.py  # embeds review_text rows into review_embeddings
+│   ├── test_phase2.py        # CLI tester for the semantic search pipeline
+│   ├── test_phase3.py        # CLI tester for the query router (all 3 routes)
+│   ├── run_profiling.py      # generates data/profile_report.json + outlier_report.json
+│   ├── test_phase4.py        # CLI tester for profiling + outlier detection
+│   └── run_eval.py           # runs the full Phase 5 evaluation suite
+├── tests/
+│   └── eval_dataset.json     # labeled test cases (sql/semantic/hybrid) with expected answers
+├── data/                  # place datasets here, also holds generated profile_report.json / outlier_report.json / eval_runs/ / eval_history.csv
 ├── requirements.txt
 ├── .env.example
 └── run.py
@@ -56,5 +80,5 @@ dm-your-data/
 - [x] Phase 3 — Query router
 - [x] Phase 4 — Data science layer (profiling, outlier detection)
 - [x] Phase 5 — Evaluation harness
-- [ ] Phase 6 — Frontend/UX polish
+- [x] Phase 6 — Frontend/UX polish
 - [ ] Phase 7 — Documentation & report
