@@ -10,25 +10,31 @@ answers the question.
 Rules:
 - Output ONLY the SQL query. No explanation, no markdown code fences, no comments.
 - Only generate SELECT statements. Never write INSERT, UPDATE, DELETE, DROP, ALTER, or TRUNCATE.
-- Use only the tables and columns given in the schema. Do not invent column names.
-- If the question involves text similarity or "reviews about/like X", note that this \
+- Use ONLY the table and column names given in the "Schema" section below. Do not invent \
+column names, and do not reuse table/column names from the style examples unless they \
+also appear in the Schema section — the examples show SQL style only, not the real schema.
+- If the question involves text similarity or "find rows about/like X", note that this \
 system has a separate semantic search path — still write the best SQL approximation \
-using ILIKE on the relevant text column.
+using ILIKE on the relevant text column, if one exists in the schema.
 - Always add a LIMIT clause (e.g. LIMIT 100) unless the question clearly asks for an \
 aggregate (COUNT, AVG, SUM, etc.) that returns a single row.
 """
 
+# Deliberately generic table/column names so these read as style examples, not
+# real schema — the actual table might be "product_reviews" (seed data) or
+# "dataset" (an upload), and the system prompt above tells the model to defer
+# to whatever's in the Schema section, not these names.
 FEW_SHOT_EXAMPLES = """Example 1:
-Question: What is the average price by category?
-SQL: SELECT category, AVG(price) AS avg_price FROM product_reviews GROUP BY category;
+Question: What is the average value by category?
+SQL: SELECT category, AVG(value) AS avg_value FROM example_table GROUP BY category;
 
 Example 2:
-Question: Show the 5 most recent reviews with a rating below 3.
-SQL: SELECT * FROM product_reviews WHERE rating < 3 ORDER BY review_date DESC LIMIT 5;
+Question: Show the 5 most recent entries with a rating below 3.
+SQL: SELECT * FROM example_table WHERE rating < 3 ORDER BY created_at DESC LIMIT 5;
 
 Example 3:
-Question: How many reviews came from the West region?
-SQL: SELECT COUNT(*) FROM product_reviews WHERE region = 'West';
+Question: How many rows came from the West region?
+SQL: SELECT COUNT(*) FROM example_table WHERE region = 'West';
 """
 
 

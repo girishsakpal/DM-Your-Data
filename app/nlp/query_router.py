@@ -1,6 +1,7 @@
 import os
 import re
 from app.llm.ollama_client import generate
+from app.data_upload import registry
 
 ROUTE_SQL = "sql"
 ROUTE_SEMANTIC = "semantic"
@@ -81,10 +82,15 @@ def llm_route(question: str) -> str:
 
 def classify(question: str) -> dict:
     """
-    Returns {"route": "sql"|"semantic"|"hybrid", "method": "heuristic"|"llm"}
+    Returns {"route": "sql"|"semantic"|"hybrid", "method": "heuristic"|"llm"|"forced"}
     The method field is kept for transparency/debugging and eventually for
     the Phase 5 eval harness to measure heuristic vs. LLM agreement.
     """
+    if not registry.has_semantic_support():
+        # Active dataset has no text column — semantic/hybrid have nothing to search.
+        # Force SQL rather than routing somewhere that will just return empty results.
+        return {"route": ROUTE_SQL, "method": "forced"}
+
     route = heuristic_route(question)
     if route is not None:
         return {"route": route, "method": "heuristic"}

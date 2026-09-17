@@ -2,9 +2,14 @@ import json
 import os
 from sqlalchemy import text
 from app.db.connection import get_engine, get_schema_summary
+from app.data_upload import registry
 
 PROFILE_REPORT_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__)))), "data", "profile_report.json")
+
+# Embedding tables (vector columns) aren't meaningful for the SQL generator to
+# see — they'd just be noise, or worse, something the LLM tries to query directly.
+KNOWN_EMBEDDING_TABLES = {"review_embeddings", "dataset_embeddings"}
 
 
 def _load_cached_profile() -> dict | None:
@@ -37,6 +42,10 @@ def build_schema_context(sample_rows: int = 2, include_profile: bool = True) -> 
     only 4 distinct values suggests it's categorical and worth an exact-match
     filter; knowing a numeric column's range helps the LLM avoid nonsensical
     bounds in generated WHERE clauses.
+
+    If a dataset has been uploaded (Phase 6.1), the context is restricted to
+    just that table — showing the old seed data alongside a fresh upload
+    would just confuse the LLM about which table to actually query.
     """
     schema = get_schema_summary()
     engine = get_engine()
@@ -44,8 +53,14 @@ def build_schema_context(sample_rows: int = 2, include_profile: bool = True) -> 
 
     profile = _load_cached_profile() if include_profile else None
 
+    active_dataset = registry.get_active_dataset()
+    focus_tables = {active_dataset["table"]} if active_dataset else set(schema.keys())
+
     with engine.connect() as conn:
         for table_name, columns in schema.items():
+            if table_name not in focus_tables or table_name in KNOWN_EMBEDDING_TABLES:
+                continue
+
             col_desc = ", ".join(f"{name} ({dtype})" for name, dtype in columns)
             block = f"Table: {table_name}\nColumns: {col_desc}"
 

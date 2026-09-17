@@ -225,6 +225,35 @@
   @media (prefers-reduced-motion:reduce){
     *{transition:none !important;animation:none !important}
   }
+
+  /* ---------- dataset bar ---------- */
+  .dataset-bar{
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    padding:12px 14px;margin-top:18px;
+    background:var(--panel);border:1px solid var(--hair);border-radius:4px;
+  }
+  .dataset-bar[data-kind="upload"]{border-left:3px solid var(--structured)}
+  .dataset-info{flex:1;min-width:200px;font-size:13px;color:var(--muted)}
+  .dataset-info b{color:var(--ink);font-weight:600}
+  .dataset-info .flag{
+    display:inline-block;margin-left:8px;padding:2px 8px;border-radius:99px;
+    font-size:11px;font-weight:600;background:var(--warn-wash);color:var(--warn);
+  }
+  .dataset-actions{display:flex;gap:8px;align-items:center;flex-shrink:0}
+  .dataset-actions label{
+    font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;
+    border:1px solid var(--ink);border-radius:3px;padding:7px 14px;
+    background:transparent;
+  }
+  .dataset-actions label:hover{background:var(--ink);color:var(--base)}
+  .dataset-actions input[type="file"]{display:none}
+  .dataset-actions button{
+    font:inherit;font-size:13px;color:var(--muted);
+    background:transparent;border:1px solid var(--hair);border-radius:3px;
+    padding:7px 12px;cursor:pointer;
+  }
+  .dataset-actions button:hover{border-color:var(--ink);color:var(--ink)}
+  .dataset-actions button:disabled{opacity:.5;cursor:progress}
 </style>
 </head>
 <body>
@@ -234,6 +263,15 @@
     <p class="mark">dm your data <span>— hybrid query</span></p>
     <p class="schema-strip" id="schemaStrip">reading schema…</p>
   </header>
+
+  <div class="dataset-bar" id="datasetBar" data-kind="seed">
+    <p class="dataset-info" id="datasetInfo">Loading dataset info…</p>
+    <div class="dataset-actions">
+      <label for="csvFile">Upload CSV</label>
+      <input type="file" id="csvFile" accept=".csv">
+      <button type="button" id="resetBtn" style="display:none">Use sample data</button>
+    </div>
+  </div>
 
   <section class="ask">
     <h1>Ask your database a question.</h1>
@@ -248,6 +286,7 @@
 
     <div class="seeds" id="seeds"></div>
   </section>
+
 
   <!-- the hero: which way the question was routed -->
   <section class="track" aria-live="polite">
@@ -287,13 +326,15 @@
 </div>
 
 <script>
-const SEEDS = [
-  "What is the average price by category?",
-  "How many reviews came from the West region?",
-  "reviews expressing frustration",
-  "products with battery life issues",
-  "frustrated customers in the North region"
-];
+const SEED_SETS = {
+  seed: [
+    "What is the average price by category?",
+    "How many reviews came from the West region?",
+    "reviews expressing frustration",
+    "products with battery life issues",
+    "frustrated customers in the North region"
+  ]
+};
 
 const qEl = document.getElementById('q');
 const goEl = document.getElementById('go');
@@ -303,15 +344,17 @@ const laneSql = document.getElementById('laneSql');
 const laneSem = document.getElementById('laneSem');
 const noteSql = document.getElementById('noteSql');
 const noteSem = document.getElementById('noteSem');
+const seedsEl = document.getElementById('seeds');
+const datasetBar = document.getElementById('datasetBar');
+const datasetInfo = document.getElementById('datasetInfo');
+const csvFile = document.getElementById('csvFile');
+const resetBtn = document.getElementById('resetBtn');
 
-// seed chips are clickable, not decorative punctuation
-SEEDS.forEach(s => {
-  const b = document.createElement('button');
-  b.type = 'button';
-  b.textContent = s;
-  b.onclick = () => { qEl.value = s; ask(); };
-  document.getElementById('seeds').appendChild(b);
-});
+// Tracks which column holds the text / row id for the CURRENT active dataset,
+// so match rendering works for an uploaded CSV as well as the seed data —
+// see matchesHtml(), which reads these instead of hardcoded column names.
+let activeTextColumn = 'review_text';
+let activeIdColumn = 'id';
 
 function esc(s){
   return String(s ?? '').replace(/[&<>"']/g, c => (
@@ -319,16 +362,132 @@ function esc(s){
   ));
 }
 
+function renderSeeds(list){
+  seedsEl.innerHTML = '';
+  list.forEach(s => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = s;
+    b.onclick = () => { qEl.value = s; ask(); };
+    seedsEl.appendChild(b);
+  });
+}
+
+/* Seed questions built from the columns of whatever's actually loaded —
+   generic on purpose, since we don't know the semantics of an uploaded CSV. */
+function seedsForUpload(meta){
+  const cols = meta.columns || [];
+  const list = [`How many rows are in ${meta.table}?`];
+  const numericGuess = cols.find(c => /price|amount|value|count|total|score|rating|qty|quantity/i.test(c));
+  if(numericGuess) list.push(`What is the average ${numericGuess}?`);
+  if(meta.text_column) list.push(`Find rows about — try your own topic here`);
+  if(cols.length > 1) list.push(`Show the first 5 rows`);
+  return list;
+}
+
 /* ---------- schema strip ---------- */
-fetch('/schema').then(r => r.json()).then(s => {
-  const tables = Object.keys(s).filter(t => t !== 'review_embeddings');
-  const txt = tables.map(t => `<b>${esc(t)}</b> ${s[t].length} cols`).join('&nbsp;&nbsp;&nbsp;');
-  document.getElementById('schemaStrip').innerHTML = txt || 'no tables found';
-}).catch(() => {
-  document.getElementById('schemaStrip').textContent = 'schema unavailable — is the database reachable?';
+function refreshSchemaStrip(){
+  fetch('/schema').then(r => r.json()).then(s => {
+    const tables = Object.keys(s).filter(t => !t.endsWith('_embeddings'));
+    const txt = tables.map(t => `<b>${esc(t)}</b> ${s[t].length} cols`).join('&nbsp;&nbsp;&nbsp;');
+    document.getElementById('schemaStrip').innerHTML = txt || 'no tables found';
+  }).catch(() => {
+    document.getElementById('schemaStrip').textContent = 'schema unavailable — is the database reachable?';
+  });
+}
+
+/* ---------- dataset bar ---------- */
+function refreshDatasetBar(){
+  fetch('/active-dataset').then(r => r.json()).then(meta => {
+    activeTextColumn = meta.text_column || null;
+    activeIdColumn = meta.id_column || 'id';
+
+    if(meta.is_upload){
+      datasetBar.dataset.kind = 'upload';
+      const semanticNote = meta.text_column
+        ? `semantic search on <b>${esc(meta.text_column)}</b>`
+        : `<span class="flag">SQL only — no text column found</span>`;
+      datasetInfo.innerHTML = `Active: <b>${esc(meta.source_filename)}</b> — ${meta.row_count} rows, ${meta.columns.length} columns. ${semanticNote}`;
+      resetBtn.style.display = '';
+      renderSeeds(seedsForUpload(meta));
+    } else {
+      datasetBar.dataset.kind = 'seed';
+      datasetInfo.innerHTML = `Active: <b>sample data</b> (product reviews) — upload your own CSV to replace it.`;
+      resetBtn.style.display = 'none';
+      renderSeeds(SEED_SETS.seed);
+    }
+  }).catch(() => {
+    datasetInfo.textContent = 'Could not load dataset info.';
+    renderSeeds(SEED_SETS.seed);
+  });
+}
+
+function datasetMessage(kind, title, bodyHtml){
+  // reuses the same panel language as query results, so an upload error
+  // looks and behaves like every other error in the app, not a different system
+  const existing = document.getElementById('datasetMsg');
+  if(existing) existing.remove();
+  const div = document.createElement('div');
+  div.id = 'datasetMsg';
+  div.style.marginTop = '10px';
+  div.innerHTML = panel(kind, title, null, bodyHtml);
+  datasetBar.insertAdjacentElement('afterend', div);
+}
+
+csvFile.addEventListener('change', async () => {
+  const file = csvFile.files[0];
+  if(!file) return;
+
+  datasetInfo.textContent = `Uploading ${file.name}… parsing, then embedding any text column. This can take a moment.`;
+  const existingMsg = document.getElementById('datasetMsg');
+  if(existingMsg) existingMsg.remove();
+
+  const form = new FormData();
+  form.append('file', file);
+
+  try{
+    const res = await fetch('/upload', { method: 'POST', body: form });
+    const data = await res.json();
+
+    if(data.success){
+      refreshDatasetBar();
+      refreshSchemaStrip();
+      datasetMessage('structured', 'Dataset loaded', `<p class="note">
+        <b>${esc(data.row_count)}</b> rows loaded as <code>${esc(data.table)}</code>.
+        ${data.text_column
+          ? `Embedded <b>${esc(data.embedded_row_count)}</b> rows from <code>${esc(data.text_column)}</code> for semantic search.`
+          : `No column looked like free text, so semantic and hybrid questions are disabled for this dataset — structured questions still work normally.`}
+      </p>`);
+    } else {
+      refreshDatasetBar();
+      datasetMessage('warn', "That file didn't load", `<p class="note">${esc(data.error)}</p>`);
+    }
+  } catch(err){
+    refreshDatasetBar();
+    datasetMessage('warn', 'Upload failed', `<p class="note">${esc(err.message)}</p>`);
+  } finally {
+    csvFile.value = '';
+  }
 });
 
+resetBtn.addEventListener('click', async () => {
+  resetBtn.disabled = true;
+  try{
+    await fetch('/reset-dataset', { method: 'POST' });
+    const existingMsg = document.getElementById('datasetMsg');
+    if(existingMsg) existingMsg.remove();
+    refreshDatasetBar();
+    refreshSchemaStrip();
+  } finally {
+    resetBtn.disabled = false;
+  }
+});
+
+refreshDatasetBar();
+refreshSchemaStrip();
+
 /* ---------- routing track ---------- */
+
 function setLanes(route, method){
   const sql = (route === 'sql' || route === 'hybrid');
   const sem = (route === 'semantic' || route === 'hybrid');
@@ -366,20 +525,31 @@ function tableHtml(cols, rows){
 }
 
 function matchesHtml(rows){
-  if(!rows.length) return `<p class="note">No review landed close enough to count as a match. Rephrase using words a reviewer would actually write.</p>`;
+  if(!rows.length) return `<p class="note">No row landed close enough to count as a match. Rephrase using words the source text would actually contain.</p>`;
+
+  const textCol = activeTextColumn || 'review_text'; // seed-data fallback if dataset info hasn't loaded yet
+  const skip = new Set(['distance', textCol, activeIdColumn]);
+
   return rows.map(r => {
     // distance 0 = identical, 2 = opposite. Show closeness, which is what you judge.
     const d = Number(r.distance);
     const pct = Math.max(0, Math.min(100, (1 - d / 2) * 100));
+
+    const badges = Object.keys(r)
+      .filter(k => !skip.has(k) && r[k] !== null && r[k] !== undefined)
+      .slice(0, 3)
+      .map(k => `<small>${esc(r[k])}</small>`)
+      .join('');
+
     return `<div class="match">
       <div class="match-top">
-        <span class="match-who">${esc(r.product_name)}<small>${esc(r.rating)} out of 5</small><small>${esc(r.region)}</small></span>
+        <span class="match-who">Row ${esc(r[activeIdColumn])}${badges}</span>
         <span class="meter">
           <span class="meter-bar"><i style="width:${pct.toFixed(0)}%"></i></span>
           <span class="meter-num">${d.toFixed(3)}</span>
         </span>
       </div>
-      <p class="match-text">${esc(r.review_text)}</p>
+      <p class="match-text">${esc(r[textCol])}</p>
     </div>`;
   }).join('');
 }

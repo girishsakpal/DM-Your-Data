@@ -7,6 +7,8 @@ from app.nlp.hybrid import run_hybrid_query
 from app.profiling.profiler import profile_database, profile_table
 from app.profiling.outliers import detect_outliers, detect_all_outliers
 from app.eval.runner import run_full_eval, save_run
+from app.data_upload.ingest import replace_active_dataset, UploadError
+from app.data_upload import registry
 
 bp = Blueprint("main", __name__)
 
@@ -183,3 +185,53 @@ def eval_endpoint():
         return jsonify(eval_output), 200
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+@bp.route("/upload", methods=["POST"])
+def upload():
+    """
+    Accepts a CSV file (multipart/form-data, field name 'file') and makes it
+    the active dataset for the whole app — SQL generation, semantic search,
+    and hybrid queries all start targeting it immediately. This REPLACES any
+    previously uploaded dataset (single active dataset by design); the
+    original seed data is untouched and can be restored via /reset-dataset.
+    """
+    if "file" not in request.files:
+        return jsonify({"success": False, "error": "No file provided (expected form field 'file')."}), 400
+
+    file = request.files["file"]
+    if not file.filename:
+        return jsonify({"success": False, "error": "No file selected."}), 400
+    if not file.filename.lower().endswith(".csv"):
+        return jsonify({"success": False, "error": "Only .csv files are supported right now."}), 400
+
+    try:
+        file_bytes = file.read()
+        metadata = replace_active_dataset(file_bytes, file.filename)
+        return jsonify({"success": True, **metadata}), 200
+    except UploadError as e:
+        return jsonify({"success": False, "error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Unexpected error during upload: {e}"}), 500
+
+
+@bp.route("/active-dataset")
+def active_dataset():
+    """Returns metadata about whichever dataset is currently active — an upload, or the seed data if none."""
+    ds = registry.get_active_dataset()
+    if ds:
+        return jsonify({"is_upload": True, **ds}), 200
+    return jsonify({
+        "is_upload": False,
+        "table": registry.DEFAULT_TABLE,
+        "text_column": registry.DEFAULT_TEXT_COLUMN,
+        "id_column": registry.DEFAULT_ID_COLUMN,
+        "columns": None,  # caller can fall back to /schema for the seed table's columns
+    }), 200
+
+
+@bp.route("/reset-dataset", methods=["POST"])
+def reset_dataset():
+    """Reverts to the seed product_reviews data. Does NOT drop the uploaded table — just stops using it."""
+    registry.clear_active_dataset()
+    return jsonify({"success": True, "message": "Reverted to seed data.", "table": registry.DEFAULT_TABLE}), 200

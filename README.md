@@ -9,8 +9,8 @@ search (pgvector) for conceptual queries.
 ### Pull local LLMs via Ollama
 
 ```bash
-ollama pull llama3.2:3b        # fast model, used for query routing (Phase 3)
-ollama pull qwen2.5-coder:7b   # stronger model, used for SQL generation (Phase 1)
+ollama pull llama3.2:3b        
+ollama pull qwen2.5-coder:3b
 ```
 
 Swap these for whatever fits your hardware — `qwen2.5-coder` in particular is
@@ -52,6 +52,9 @@ dm-your-data/
 │   ├── eval/
 │   │   ├── metrics.py          # execution-accuracy comparison + precision/recall
 │   │   └── runner.py           # runs the labeled dataset end-to-end, tracks history
+│   ├── data_upload/
+│   │   ├── registry.py         # tracks which dataset is active (upload vs. seed data)
+│   │   └── ingest.py           # CSV parsing, type inference, table replacement, embedding
 │   └── templates/
 │       └── index.html      # the whole UI — one file, no build step
 ├── scripts/
@@ -63,7 +66,8 @@ dm-your-data/
 │   ├── test_phase3.py        # CLI tester for the query router (all 3 routes)
 │   ├── run_profiling.py      # generates data/profile_report.json + outlier_report.json
 │   ├── test_phase4.py        # CLI tester for profiling + outlier detection
-│   └── run_eval.py           # runs the full Phase 5 evaluation suite
+│   ├── run_eval.py           # runs the full Phase 5 evaluation suite
+│   └── test_upload.py        # tests the CSV upload pipeline (built-in sample or your own file)
 ├── tests/
 │   └── eval_dataset.json     # labeled test cases (sql/semantic/hybrid) with expected answers
 ├── data/                  # place datasets here, also holds generated profile_report.json / outlier_report.json / eval_runs/ / eval_history.csv

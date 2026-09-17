@@ -6,6 +6,7 @@ from app.nlp.schema_context import build_schema_context
 from app.nlp.sql_executor import validate_sql, UnsafeSQLError
 from app.db.connection import get_engine
 from app.embeddings.semantic_search import semantic_search
+from app.data_upload import registry
 from sqlalchemy import text as sql_text
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -50,12 +51,15 @@ def decompose_query(question: str) -> dict:
     }
 
 
-def get_candidate_ids(filter_sql: str, table: str = "product_reviews") -> list[int]:
+def get_candidate_ids(filter_sql: str, table: str = None) -> list[int]:
     """
     Runs the LLM-generated WHERE condition to get matching row IDs.
     Validated the same way as the main SQL path — no arbitrary SQL execution.
+    table defaults to whatever dataset is currently active.
     """
-    full_sql = f"SELECT id FROM {table} WHERE {filter_sql}"
+    table = table or registry.active_table()
+    id_column = registry.active_id_column()
+    full_sql = f'SELECT "{id_column}" FROM "{table}" WHERE {filter_sql}'
     validate_sql(full_sql)  # reuses Phase 1's SELECT-only / forbidden-keyword checks
 
     engine = get_engine()
