@@ -41,7 +41,7 @@ def _try_parse_dates(df: pd.DataFrame) -> pd.DataFrame:
     """
     Attempts to convert object columns that look like dates into real
     datetime columns, so the SQL generator gets a proper date type instead
-    of treating everything as text. Safe because of the ratio check — a
+    of treating everything as text. Safe because of the ratio check - a
     genuinely non-date column (like 'region') will fail to parse for most
     values and get left alone.
     """
@@ -58,7 +58,7 @@ def _try_parse_dates(df: pd.DataFrame) -> pd.DataFrame:
 def _detect_text_column(df: pd.DataFrame) -> str | None:
     """
     Picks the object-dtype column with the longest average string length,
-    as long as it clears MIN_AVG_TEXT_LENGTH — a heuristic for 'this looks
+    as long as it clears MIN_AVG_TEXT_LENGTH - a heuristic for 'this looks
     like free text (a review, a comment)' vs 'this looks like a short
     categorical value (a region, a status)'.
     """
@@ -94,6 +94,13 @@ def parse_csv(file_bytes: bytes, filename: str) -> pd.DataFrame:
     df.columns = [_sanitize_column_name(c, seen) for c in df.columns]
     df = _try_parse_dates(df)
 
+    # The upload pipeline always adds its own "id" column from the DataFrame's
+    # index (see replace_active_dataset). If the CSV already has a column
+    # called "id", rename it so the two don't collide - the alternative is
+    # a hard-to-diagnose "duplicate column" failure from to_sql.
+    if ID_COLUMN in df.columns:
+        df = df.rename(columns={ID_COLUMN: f"source_{ID_COLUMN}"})
+
     return df
 
 
@@ -104,7 +111,16 @@ def replace_active_dataset(file_bytes: bytes, filename: str) -> dict:
     (SQL generation, semantic search, hybrid) starts using this data.
 
     This REPLACES whatever was previously uploaded (single active dataset,
-    by design) — it does not touch the original product_reviews seed table.
+    by design) - it does not touch the original product_reviews seed table.
+
+    Table load and embedding are deliberately decoupled: if embedding fails
+    (GPU memory pressure, an unexpected model error, etc.) after the table
+    has already been committed, that is NOT treated as an upload failure -
+    the data is genuinely loaded and queryable via SQL. The failure is
+    recorded in the returned metadata's "embedding_error" field instead of
+    raising, so the UI can say "loaded, but semantic search isn't available"
+    rather than reporting the whole upload as failed when it demonstrably
+    was not.
     """
     df = parse_csv(file_bytes, filename)
     engine = get_engine()
@@ -114,44 +130,60 @@ def replace_active_dataset(file_bytes: bytes, filename: str) -> dict:
 
     # pandas + SQLAlchemy infer sensible Postgres column types from the
     # DataFrame dtypes automatically (int64 -> BIGINT, float64 -> DOUBLE
-    # PRECISION, datetime64 -> TIMESTAMP, object -> TEXT) — no manual
+    # PRECISION, datetime64 -> TIMESTAMP, object -> TEXT) - no manual
     # type mapping needed here.
     df_indexed = df.reset_index(drop=True)
     df_indexed.to_sql(DATASET_TABLE, con=engine, if_exists="replace", index=True, index_label=ID_COLUMN)
+    # Everything above this line either succeeds or raises before any table
+    # is touched - if we get here, the data is safely loaded and queryable,
+    # regardless of what happens next.
 
-    text_column = _detect_text_column(df)
+    detected_text_column = _detect_text_column(df)
+    text_column = None
     embedded_rows = 0
+    embedding_error = None
 
-    if text_column:
-        embed_subset = df_indexed.head(MAX_EMBED_ROWS)
-        texts = embed_subset[text_column].fillna("").astype(str).tolist()
-        vectors = embed_batch(texts)
-        # Determined from the actual embedding output rather than hardcoded —
-        # if EMBEDDING_MODEL ever changes to a model with different output
-        # dimensions, this table is created to match instead of silently
-        # breaking on a dimension mismatch at insert time.
-        vector_dim = len(vectors[0]) if vectors else 384
+    if detected_text_column:
+        try:
+            embed_subset = df_indexed.head(MAX_EMBED_ROWS)
+            texts = embed_subset[detected_text_column].fillna("").astype(str).tolist()
+            vectors = embed_batch(texts)
+            # Determined from the actual embedding output rather than hardcoded -
+            # if EMBEDDING_MODEL ever changes to a model with different output
+            # dimensions, this table is created to match instead of silently
+            # breaking on a dimension mismatch at insert time.
+            vector_dim = len(vectors[0]) if vectors else 384
 
-        with engine.begin() as conn:
-            conn.execute(text(f'''
-                CREATE TABLE "{DATASET_EMBEDDING_TABLE}" (
-                    row_id INTEGER PRIMARY KEY,
-                    embedding VECTOR({vector_dim})
-                )
-            '''))
+            with engine.begin() as conn:
+                conn.execute(text(f'''
+                    CREATE TABLE "{DATASET_EMBEDDING_TABLE}" (
+                        row_id INTEGER PRIMARY KEY,
+                        embedding VECTOR({vector_dim})
+                    )
+                '''))
 
-        with engine.begin() as conn:
-            # embed_subset's index IS the id (0..n-1) — that's what to_sql just
-            # wrote as the "id" column via index_label. There's no in-memory
-            # "id" column to read from; the index itself is the row identifier.
-            for row_id, vector in zip(embed_subset.index, vectors):
-                vector_literal = "[" + ",".join(str(x) for x in vector) + "]"
-                conn.execute(
-                    text(f'INSERT INTO "{DATASET_EMBEDDING_TABLE}" (row_id, embedding) '
-                         f'VALUES (:row_id, CAST(:embedding AS vector))'),
-                    {"row_id": int(row_id), "embedding": vector_literal},
-                )
-        embedded_rows = len(embed_subset)
+            with engine.begin() as conn:
+                # embed_subset's index IS the id (0..n-1) - that's what to_sql just
+                # wrote as the "id" column via index_label. There's no in-memory
+                # "id" column to read from; the index itself is the row identifier.
+                for row_id, vector in zip(embed_subset.index, vectors):
+                    vector_literal = "[" + ",".join(str(x) for x in vector) + "]"
+                    conn.execute(
+                        text(f'INSERT INTO "{DATASET_EMBEDDING_TABLE}" (row_id, embedding) '
+                             f'VALUES (:row_id, CAST(:embedding AS vector))'),
+                        {"row_id": int(row_id), "embedding": vector_literal},
+                    )
+            text_column = detected_text_column
+            embedded_rows = len(embed_subset)
+
+        except Exception as e:
+            # Table load already succeeded (see comment above) - don't let an
+            # embedding failure masquerade as an upload failure. Clean up any
+            # partially-created embedding table, and fall back to SQL-only
+            # for this dataset rather than leaving it half-configured.
+            embedding_error = str(e)
+            with engine.begin() as conn:
+                conn.execute(text(f'DROP TABLE IF EXISTS "{DATASET_EMBEDDING_TABLE}"'))
 
     metadata = {
         "table": DATASET_TABLE,
@@ -159,6 +191,8 @@ def replace_active_dataset(file_bytes: bytes, filename: str) -> dict:
         "id_column": ID_COLUMN,
         "embedding_fk": "row_id",
         "text_column": text_column,
+        "detected_text_column": detected_text_column,
+        "embedding_error": embedding_error,
         "columns": list(df.columns),
         "row_count": len(df),
         "embedded_row_count": embedded_rows,

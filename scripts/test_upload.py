@@ -32,7 +32,7 @@ def main():
             file_bytes = f.read()
         filename = os.path.basename(path)
     else:
-        print("No CSV path given — using the built-in sample restaurant dataset.\n")
+        print("No CSV path given - using the built-in sample restaurant dataset.\n")
         file_bytes = SAMPLE_CSV.encode("utf-8")
         filename = "sample_restaurants.csv"
 
@@ -46,7 +46,7 @@ def main():
     print(f"  Table:            {metadata['table']}")
     print(f"  Row count:        {metadata['row_count']}")
     print(f"  Columns:          {metadata['columns']}")
-    print(f"  Text column:      {metadata['text_column'] or '(none detected — SQL only)'}")
+    print(f"  Text column:      {metadata['text_column'] or '(none detected - SQL only)'}")
     print(f"  Embedded rows:    {metadata['embedded_row_count']}")
 
     print("\nTry it now:")

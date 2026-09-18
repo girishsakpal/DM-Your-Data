@@ -4,7 +4,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.db.connection import get_engine
 
 # Statement types we refuse to run, even if somehow generated despite the prompt rules.
-# This is a defense-in-depth check, not the only safeguard — see validate_sql().
+# This is a defense-in-depth check, not the only safeguard - see validate_sql().
 FORBIDDEN_KEYWORDS = [
     "INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "TRUNCATE",
     "CREATE", "GRANT", "REVOKE", "EXECUTE", "CALL", "COPY",
@@ -28,7 +28,7 @@ def validate_sql(sql: str) -> None:
     if not re.match(r"^\s*(SELECT|WITH)\b", stripped, re.IGNORECASE):
         raise UnsafeSQLError("Only SELECT statements are allowed.")
 
-    # Reject multiple statements (e.g. "SELECT 1; DROP TABLE x;") — the split in
+    # Reject multiple statements (e.g. "SELECT 1; DROP TABLE x;") - the split in
     # extract_sql() should already prevent this, but check again here since this
     # function may be called on SQL from other sources later (e.g. user-edited SQL).
     if ";" in stripped:
@@ -69,7 +69,7 @@ def execute_sql(sql: str) -> dict:
 
 def generate_and_execute(question: str, max_retries: int = 1):
     """
-    Full pipeline: generate SQL, validate, execute — with one retry that feeds
+    Full pipeline: generate SQL, validate, execute - with one retry that feeds
     the error back to the LLM if the first attempt fails. Returns a dict with
     either results or an error, plus the SQL for transparency/debugging.
     """

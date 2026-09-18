@@ -1,6 +1,6 @@
 """
 Runs the full Phase 5 evaluation suite: SQL execution accuracy, routing
-accuracy, and semantic/hybrid retrieval precision — against the labeled
+accuracy, and semantic/hybrid retrieval precision - against the labeled
 dataset in tests/eval_dataset.json.
 
 Saves a detailed per-case report to data/eval_runs/ and appends a summary
@@ -50,7 +50,7 @@ def print_report(eval_output: dict):
             if r["precision"] < 1.0:
                 print(f"    returned: {r['returned_ids']}  relevant: {r['relevant_ids']}")
 
-    print("\nFailures are expected the first time you run this — use them to")
+    print("\nFailures are expected the first time you run this - use them to")
     print("decide whether to adjust prompts, thresholds, or the model itself.")
 
 

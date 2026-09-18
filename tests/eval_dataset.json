@@ -53,13 +53,13 @@
   "semantic_cases": [
     {
       "id": "sem_01",
-      "question": "reviews expressing frustration",
+      "question": "Number of reviews expressing frustration",
       "expected_route": "semantic",
       "relevant_ids": [2, 4]
     },
     {
       "id": "sem_02",
-      "question": "products with battery life issues",
+      "question": "How many products have battery life issues",
       "expected_route": "semantic",
       "relevant_ids": [1, 5]
     },

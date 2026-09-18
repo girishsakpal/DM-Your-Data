@@ -30,7 +30,7 @@ def health():
 
 @bp.route("/schema")
 def schema():
-    """Returns the introspected DB schema — this becomes LLM context in Phase 1."""
+    """Returns the introspected DB schema - this becomes LLM context in Phase 1."""
     try:
         return jsonify(get_schema_summary())
     except Exception as e:
@@ -88,7 +88,7 @@ def ask():
     the question, then dispatches to SQL, semantic search, or the hybrid path.
 
     Request body: {"question": "frustrated customers in the West region"}
-    Response includes a "route" and "route_method" field for transparency —
+    Response includes a "route" and "route_method" field for transparency -
     useful for debugging and for the Phase 5 eval harness later.
     """
     data = request.get_json(silent=True) or {}
@@ -129,7 +129,7 @@ def profile():
     """
     Phase 4: live data profiling. Optional ?table=<name> to profile just one
     table instead of the whole database (profiling every table can be slow
-    on larger datasets — this endpoint always runs live, unlike the cached
+    on larger datasets - this endpoint always runs live, unlike the cached
     report schema_context.py reads for SQL generation).
     """
     table = request.args.get("table")
@@ -145,7 +145,7 @@ def profile():
 def outliers():
     """
     Phase 4: statistical outlier detection. Query params:
-      table (required), column (optional — omit to check all numeric columns),
+      table (required), column (optional - omit to check all numeric columns),
       method ("zscore" default, or "iqr")
 
     Examples:
@@ -173,10 +173,10 @@ def eval_endpoint():
     Phase 5: runs the full evaluation suite against tests/eval_dataset.json
     and returns the summary + per-case results. Also saves the run to
     data/eval_runs/ and appends to data/eval_history.csv, same as
-    scripts/run_eval.py — this just makes it triggerable over HTTP too.
+    scripts/run_eval.py - this just makes it triggerable over HTTP too.
 
     Warning: this makes a real LLM call (and DB query) per test case, so it
-    is not fast — expect it to take a while depending on your dataset size.
+    is not fast - expect it to take a while depending on your dataset size.
     """
     try:
         eval_output = run_full_eval()
@@ -191,7 +191,7 @@ def eval_endpoint():
 def upload():
     """
     Accepts a CSV file (multipart/form-data, field name 'file') and makes it
-    the active dataset for the whole app — SQL generation, semantic search,
+    the active dataset for the whole app - SQL generation, semantic search,
     and hybrid queries all start targeting it immediately. This REPLACES any
     previously uploaded dataset (single active dataset by design); the
     original seed data is untouched and can be restored via /reset-dataset.
@@ -217,7 +217,7 @@ def upload():
 
 @bp.route("/active-dataset")
 def active_dataset():
-    """Returns metadata about whichever dataset is currently active — an upload, or the seed data if none."""
+    """Returns metadata about whichever dataset is currently active - an upload, or the seed data if none."""
     ds = registry.get_active_dataset()
     if ds:
         return jsonify({"is_upload": True, **ds}), 200
@@ -232,6 +232,6 @@ def active_dataset():
 
 @bp.route("/reset-dataset", methods=["POST"])
 def reset_dataset():
-    """Reverts to the seed product_reviews data. Does NOT drop the uploaded table — just stops using it."""
+    """Reverts to the seed product_reviews data. Does NOT drop the uploaded table - just stops using it."""
     registry.clear_active_dataset()
     return jsonify({"success": True, "message": "Reverted to seed data.", "table": registry.DEFAULT_TABLE}), 200

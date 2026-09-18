@@ -4,7 +4,7 @@ import json
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ACTIVE_DATASET_PATH = os.path.join(BASE_DIR, "data", "active_dataset.json")
 
-# Fallback values when no dataset has been uploaded yet — matches init.sql's
+# Fallback values when no dataset has been uploaded yet - matches init.sql's
 # seed schema so the app behaves exactly as it did in Phases 0-6 until the
 # person uploads their own data.
 DEFAULT_TABLE = "product_reviews"
@@ -29,7 +29,7 @@ def set_active_dataset(metadata: dict):
 
 
 def clear_active_dataset():
-    """Reverts to the seed data — does NOT drop the uploaded table, just stops pointing at it."""
+    """Reverts to the seed data - does NOT drop the uploaded table, just stops pointing at it."""
     if os.path.exists(ACTIVE_DATASET_PATH):
         os.remove(ACTIVE_DATASET_PATH)
 
@@ -40,7 +40,7 @@ def active_table() -> str:
 
 
 def active_text_column() -> str | None:
-    """None means this dataset has no column suitable for semantic search — SQL-only."""
+    """None means this dataset has no column suitable for semantic search - SQL-only."""
     ds = get_active_dataset()
     if ds:
         return ds.get("text_column")  # may be None even when a dataset IS active
@@ -63,5 +63,5 @@ def active_embedding_fk() -> str:
 
 
 def has_semantic_support() -> bool:
-    """False for uploads where no column looked like free text — semantic/hybrid routes should be disabled."""
+    """False for uploads where no column looked like free text - semantic/hybrid routes should be disabled."""
     return active_text_column() is not None

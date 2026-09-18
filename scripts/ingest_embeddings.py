@@ -1,6 +1,6 @@
 """
 Embeds review_text for any product_reviews rows that don't yet have an
-embedding, and stores the vectors in review_embeddings. Safe to re-run —
+embedding, and stores the vectors in review_embeddings. Safe to re-run -
 only processes rows that are missing an embedding.
 
 Usage:
@@ -47,7 +47,7 @@ def main():
         rows = fetch_unembedded_rows(conn)
 
         if not rows:
-            print("Nothing to do — all rows already have embeddings.")
+            print("Nothing to do - all rows already have embeddings.")
             return
 
         print(f"Embedding {len(rows)} row(s)...")

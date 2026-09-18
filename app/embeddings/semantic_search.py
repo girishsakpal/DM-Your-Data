@@ -5,7 +5,7 @@ from app.data_upload import registry
 
 DEFAULT_TOP_K = 10
 # Cosine distance ranges 0 (identical) to 2 (opposite). Results above this are
-# treated as "not actually relevant" — tune this if results feel too loose/strict.
+# treated as "not actually relevant" - tune this if results feel too loose/strict.
 MAX_DISTANCE = 0.8
 
 
@@ -17,7 +17,7 @@ def semantic_search(query: str, top_k: int = DEFAULT_TOP_K, table: str = None,
     distance, and joins back to the source table for full row context.
 
     table/text_column/embedding_table default to whatever dataset is
-    currently active (Phase 6.1's upload feature) — the seed product_reviews
+    currently active (Phase 6.1's upload feature) - the seed product_reviews
     table if nothing's been uploaded. Pass them explicitly to override.
 
     candidate_ids: if provided, restricts the search to only these row IDs.
@@ -33,7 +33,7 @@ def semantic_search(query: str, top_k: int = DEFAULT_TOP_K, table: str = None,
     embedding_fk = registry.active_embedding_fk()
 
     if not text_column:
-        # This dataset has no column that looked like free text — nothing to search semantically.
+        # This dataset has no column that looked like free text - nothing to search semantically.
         return {"query": query, "results": [], "result_count": 0, "raw_result_count": 0,
                 "note": "The active dataset has no text column suitable for semantic search."}
 
@@ -47,7 +47,7 @@ def semantic_search(query: str, top_k: int = DEFAULT_TOP_K, table: str = None,
     params = {"qvec": vector_literal, "top_k": top_k}
     if candidate_ids is not None:
         if not candidate_ids:
-            # Empty candidate set (SQL filter matched nothing) — no point querying.
+            # Empty candidate set (SQL filter matched nothing) - no point querying.
             return {"query": query, "results": [], "result_count": 0, "raw_result_count": 0}
         id_filter_clause = f'WHERE r."{id_column}" = ANY(:candidate_ids)'
         params["candidate_ids"] = candidate_ids

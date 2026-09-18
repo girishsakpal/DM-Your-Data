@@ -4,7 +4,7 @@ from decimal import Decimal
 def normalize_value(v):
     """
     Normalizes a single cell value so equivalent results compare equal even
-    if types differ slightly (Decimal vs float, trailing zeros, etc.) — this
+    if types differ slightly (Decimal vs float, trailing zeros, etc.) - this
     is what makes this 'execution accuracy' rather than a brittle exact
     string/type match.
     """
@@ -21,7 +21,7 @@ def normalize_row(row) -> tuple:
 
 def result_sets_match(actual_rows, expected_rows) -> bool:
     """
-    Compares two result sets as unordered sets of normalized rows —
+    Compares two result sets as unordered sets of normalized rows -
     intentionally ignoring row order and column order/naming, since a
     correct query can list columns in a different order than the reference
     and still be correct. This is 'execution accuracy', not exact-match.

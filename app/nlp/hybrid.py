@@ -13,7 +13,7 @@ from sqlalchemy.exc import SQLAlchemyError
 DECOMPOSE_SYSTEM_PROMPT = """You split a natural language question into two parts:
 
 1. "filter_sql": a PostgreSQL WHERE-clause condition (just the condition, no \
-"WHERE" keyword) capturing any structured filters — region, price, rating, \
+"WHERE" keyword) capturing any structured filters - region, price, rating, \
 date range, category. Use only columns from the schema given. If there is no \
 structured filter, use null.
 2. "semantic_query": the conceptual/fuzzy part of the question, rewritten as a \
@@ -23,7 +23,7 @@ there is no conceptual part, use null.
 Respond with ONLY a JSON object like:
 {"filter_sql": "region = 'West'", "semantic_query": "frustrated with shipping"}
 
-No explanation, no markdown fences — just the raw JSON object."""
+No explanation, no markdown fences - just the raw JSON object."""
 
 
 def decompose_query(question: str) -> dict:
@@ -41,7 +41,7 @@ def decompose_query(question: str) -> dict:
     try:
         parsed = json.loads(json_str)
     except json.JSONDecodeError:
-        # If decomposition fails, treat the whole question as semantic-only —
+        # If decomposition fails, treat the whole question as semantic-only -
         # a safer fallback than crashing the request.
         return {"filter_sql": None, "semantic_query": question}
 
@@ -54,7 +54,7 @@ def decompose_query(question: str) -> dict:
 def get_candidate_ids(filter_sql: str, table: str = None) -> list[int]:
     """
     Runs the LLM-generated WHERE condition to get matching row IDs.
-    Validated the same way as the main SQL path — no arbitrary SQL execution.
+    Validated the same way as the main SQL path - no arbitrary SQL execution.
     table defaults to whatever dataset is currently active.
     """
     table = table or registry.active_table()
@@ -87,7 +87,7 @@ def run_hybrid_query(question: str, top_k: int = 10) -> dict:
         try:
             candidate_ids = get_candidate_ids(filter_sql)
         except (UnsafeSQLError, SQLAlchemyError) as e:
-            # Don't fail the whole request — fall back to unfiltered semantic search
+            # Don't fail the whole request - fall back to unfiltered semantic search
             # and surface the issue for transparency instead of hiding it.
             filter_error = str(e)
             candidate_ids = None

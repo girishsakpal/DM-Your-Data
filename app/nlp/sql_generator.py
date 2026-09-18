@@ -12,16 +12,16 @@ Rules:
 - Only generate SELECT statements. Never write INSERT, UPDATE, DELETE, DROP, ALTER, or TRUNCATE.
 - Use ONLY the table and column names given in the "Schema" section below. Do not invent \
 column names, and do not reuse table/column names from the style examples unless they \
-also appear in the Schema section — the examples show SQL style only, not the real schema.
+also appear in the Schema section - the examples show SQL style only, not the real schema.
 - If the question involves text similarity or "find rows about/like X", note that this \
-system has a separate semantic search path — still write the best SQL approximation \
+system has a separate semantic search path - still write the best SQL approximation \
 using ILIKE on the relevant text column, if one exists in the schema.
 - Always add a LIMIT clause (e.g. LIMIT 100) unless the question clearly asks for an \
 aggregate (COUNT, AVG, SUM, etc.) that returns a single row.
 """
 
 # Deliberately generic table/column names so these read as style examples, not
-# real schema — the actual table might be "product_reviews" (seed data) or
+# real schema - the actual table might be "product_reviews" (seed data) or
 # "dataset" (an upload), and the system prompt above tells the model to defer
 # to whatever's in the Schema section, not these names.
 FEW_SHOT_EXAMPLES = """Example 1:
@@ -80,7 +80,7 @@ def extract_sql(raw_response: str) -> str:
 
 def generate_sql(question: str, previous_error: str = None, previous_sql: str = None) -> dict:
     """
-    Returns {"sql": str, "prompt": str} — prompt is included for debugging/eval logging.
+    Returns {"sql": str, "prompt": str} - prompt is included for debugging/eval logging.
     """
     model = os.getenv("SQL_MODEL", "qwen2.5-coder:7b")
     schema_context = build_schema_context()

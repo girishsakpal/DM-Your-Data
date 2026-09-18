@@ -68,7 +68,7 @@ def profile_column(conn, table: str, column: str, data_type: str) -> dict:
         profile["stats"] = _profile_numeric_column(conn, table, column)
     elif data_type in TEXT_TYPES:
         profile["stats"] = _profile_text_column(conn, table, column)
-    # date/other types: null rate + cardinality only for now — good enough signal
+    # date/other types: null rate + cardinality only for now - good enough signal
     # for the SQL generator without adding a lot more branching logic.
 
     return profile

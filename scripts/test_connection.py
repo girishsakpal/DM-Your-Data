@@ -17,10 +17,10 @@ def check_postgres():
     print("Checking PostgreSQL connection...")
     try:
         version = test_connection()
-        print(f"  OK — {version}")
+        print(f"  OK - {version}")
         return True
     except Exception as e:
-        print(f"  FAILED — {e}")
+        print(f"  FAILED - {e}")
         print("  -> Is docker compose running? Try: docker compose up -d")
         return False
 
@@ -30,13 +30,13 @@ def check_schema():
     try:
         schema = get_schema_summary()
         if not schema:
-            print("  WARNING — no tables found. Did init.sql run? (only runs on first container start)")
+            print("  WARNING - no tables found. Did init.sql run? (only runs on first container start)")
             return False
         for table, cols in schema.items():
             print(f"  {table}: {len(cols)} columns")
         return True
     except Exception as e:
-        print(f"  FAILED — {e}")
+        print(f"  FAILED - {e}")
         return False
 
 
@@ -49,13 +49,13 @@ def check_ollama():
         models = client.list()
         names = [m["model"] for m in models.get("models", [])]
         if names:
-            print(f"  OK — available models: {', '.join(names)}")
+            print(f"  OK - available models: {', '.join(names)}")
         else:
             print("  Ollama is reachable but no models are pulled yet.")
             print("  -> Try: ollama pull llama3.2:3b")
         return True
     except Exception as e:
-        print(f"  FAILED — {e}")
+        print(f"  FAILED - {e}")
         print("  -> Is Ollama running? Try: ollama serve")
         return False
 
@@ -66,4 +66,4 @@ if __name__ == "__main__":
     if all(results):
         print("All checks passed. Ready for Phase 1.")
     else:
-        print("Some checks failed — fix the issues above before moving on.")
+        print("Some checks failed - fix the issues above before moving on.")

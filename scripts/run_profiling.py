@@ -1,12 +1,12 @@
 """
 Runs automatic data profiling across all tables and saves the report to
-data/profile_report.json — this is what schema_context.py reads to enrich
+data/profile_report.json - this is what schema_context.py reads to enrich
 LLM prompts with column stats (Phase 4 -> Phase 1 integration).
 
 Also runs outlier detection on all numeric columns and saves to
 data/outlier_report.json.
 
-Re-run this whenever your data changes meaningfully — it's not automatic
+Re-run this whenever your data changes meaningfully - it's not automatic
 yet (see README Phase 4 known limitations).
 
 Usage:

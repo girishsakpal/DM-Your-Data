@@ -7,7 +7,7 @@ ROUTE_SQL = "sql"
 ROUTE_SEMANTIC = "semantic"
 ROUTE_HYBRID = "hybrid"
 
-# Signals that strongly suggest a precise, structured question — aggregations,
+# Signals that strongly suggest a precise, structured question - aggregations,
 # counts, comparisons, sorting. These map to the SQL path.
 SQL_SIGNALS = [
     r"\bhow many\b", r"\baverage\b", r"\bavg\b", r"\bcount\b", r"\bsum\b",
@@ -16,7 +16,7 @@ SQL_SIGNALS = [
     r"\bbetween .* and .*\b", r"\blist all\b",
 ]
 
-# Signals that suggest a fuzzy/conceptual question — sentiment, similarity,
+# Signals that suggest a fuzzy/conceptual question - sentiment, similarity,
 # themes. These map to the semantic search path.
 SEMANTIC_SIGNALS = [
     r"\bsimilar to\b", r"\babout\b", r"\bfeel(s|ing)?\b", r"\bfrustrat", r"\bhappy\b",
@@ -36,7 +36,7 @@ of structured data (prices, ratings, dates, regions, categories).
 - "semantic": the question is conceptual/fuzzy and about the MEANING or SENTIMENT \
 of review text (e.g. finding reviews that express a feeling or theme), with no \
 structured filter.
-- "hybrid": the question needs BOTH — a structured filter (e.g. a region, price \
+- "hybrid": the question needs BOTH - a structured filter (e.g. a region, price \
 range, or date range) AND a conceptual/semantic match on review text.
 
 Respond with exactly one word: sql, semantic, or hybrid. Nothing else."""
@@ -64,7 +64,7 @@ def heuristic_route(question: str) -> str | None:
     if has_sql_signal:
         return ROUTE_SQL
 
-    return None  # ambiguous — let the LLM decide
+    return None  # ambiguous - let the LLM decide
 
 
 def llm_route(question: str) -> str:
@@ -87,7 +87,7 @@ def classify(question: str) -> dict:
     the Phase 5 eval harness to measure heuristic vs. LLM agreement.
     """
     if not registry.has_semantic_support():
-        # Active dataset has no text column — semantic/hybrid have nothing to search.
+        # Active dataset has no text column - semantic/hybrid have nothing to search.
         # Force SQL rather than routing somewhere that will just return empty results.
         return {"route": ROUTE_SQL, "method": "forced"}
 

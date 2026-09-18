@@ -24,7 +24,7 @@ def eval_sql_case(case: dict) -> dict:
     """
     Execution accuracy: runs the LLM-generated SQL and the hand-written
     expected SQL independently, then compares result sets rather than SQL
-    text — a correct query can be phrased many different ways syntactically.
+    text - a correct query can be phrased many different ways syntactically.
     Also checks routing: did the router send this question down the SQL path?
     """
     question = case["question"]
@@ -151,7 +151,7 @@ def save_run(eval_output: dict) -> str:
 
 def _append_history(summary: dict):
     """
-    Appends one row per run to data/eval_history.csv — this is what lets you
+    Appends one row per run to data/eval_history.csv - this is what lets you
     track accuracy over time as you change prompts, models, or thresholds,
     instead of only ever seeing the latest run's numbers.
     """

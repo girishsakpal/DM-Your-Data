@@ -6,7 +6,7 @@ from functools import lru_cache
 def get_model():
     """
     Loads the embedding model once per process. Cached because loading a
-    sentence-transformers model takes a second or two — don't want to pay
+    sentence-transformers model takes a second or two - don't want to pay
     that cost on every request.
     """
     from sentence_transformers import SentenceTransformer
@@ -22,7 +22,7 @@ def embed_text(text: str) -> list[float]:
 
 
 def embed_batch(texts: list[str]) -> list[list[float]]:
-    """Batched version — much faster than calling embed_text in a loop for many rows."""
+    """Batched version - much faster than calling embed_text in a loop for many rows."""
     model = get_model()
     vectors = model.encode(texts, normalize_embeddings=True, show_progress_bar=True)
     return vectors.tolist()

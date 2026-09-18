@@ -4,8 +4,6 @@ A hybrid RAG system for querying tabular data in natural language that combines
 LLM-generated SQL (precise aggregations, PostgreSQL) with vector-based semantic
 search (pgvector) for conceptual queries.
 
-## Phase 0 Setup
-
 ### Pull local LLMs via Ollama
 
 ```bash
@@ -13,18 +11,18 @@ ollama pull llama3.2:3b
 ollama pull qwen2.5-coder:3b
 ```
 
-Swap these for whatever fits your hardware — `qwen2.5-coder` in particular is
-worth keeping since it's tuned for code/SQL generation.
-
 ### Verify everything is wired up
 
 ```bash
 python scripts/test_connection.py
 ```
 
-You should see OK for Postgres, schema introspection, and Ollama. Fix anything
-that fails before moving to Phase 1 — the whole pipeline depends on this
-foundation.
+### Run the app:
+
+```bash
+python run.py
+```
+Then open `http://localhost:5000`.
 
 ## Project Structure
 
@@ -56,7 +54,7 @@ dm-your-data/
 │   │   ├── registry.py         # tracks which dataset is active (upload vs. seed data)
 │   │   └── ingest.py           # CSV parsing, type inference, table replacement, embedding
 │   └── templates/
-│       └── index.html      # the whole UI — one file, no build step
+│       └── index.html      # the whole UI - one file, no build step
 ├── scripts/
 │   ├── init.sql              # DB schema + seed data
 │   ├── test_connection.py    # Phase 0 sanity check script
@@ -70,7 +68,7 @@ dm-your-data/
 │   └── test_upload.py        # tests the CSV upload pipeline (built-in sample or your own file)
 ├── tests/
 │   └── eval_dataset.json     # labeled test cases (sql/semantic/hybrid) with expected answers
-├── data/                  # place datasets here, also holds generated profile_report.json / outlier_report.json / eval_runs/ / eval_history.csv
+├── data/                  # place datasets here - also holds generated profile_report.json / outlier_report.json / eval_runs/ / eval_history.csv
 ├── requirements.txt
 ├── .env.example
 └── run.py
@@ -78,11 +76,11 @@ dm-your-data/
 
 ## Roadmap
 
-- [x] Phase 0 — Setup & scoping
-- [x] Phase 1 — Core text-to-SQL pipeline
-- [x] Phase 2 — Semantic search layer
-- [x] Phase 3 — Query router
-- [x] Phase 4 — Data science layer (profiling, outlier detection)
-- [x] Phase 5 — Evaluation harness
-- [x] Phase 6 — Frontend/UX polish
-- [ ] Phase 7 — Documentation & report
+- [x] Phase 0 - Setup & scoping
+- [x] Phase 1 - Core text-to-SQL pipeline
+- [x] Phase 2 - Semantic search layer
+- [x] Phase 3 - Query router
+- [x] Phase 4 - Data science layer (profiling, outlier detection)
+- [x] Phase 5 - Evaluation harness
+- [x] Phase 6 - Frontend/UX polish
+- [x] Phase 7 - Upload your own dataset feature

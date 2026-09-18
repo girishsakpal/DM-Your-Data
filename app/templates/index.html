@@ -1,547 +1,1058 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>dm your data</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Archivo+Expanded:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --base:#F2F4F3;
-    --panel:#FBFCFB;
-    --ink:#16202B;
-    --muted:#6D7C89;
-    --hair:#D9DFDD;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>dm your data</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Archivo+Expanded:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --base: #80fbbd;
+      --panel: #F7FDFA;
+      --ink: #10251D;
+      --muted: #4C6259;
+      --hair: #060606;
 
-    /* The two lanes. These are load-bearing: every element inherits the
-       colour of whichever half of the system produced it. */
-    --structured:#2F6F5E;
-    --structured-wash:#E4EEEA;
-    --meaning:#6B4BA8;
-    --meaning-wash:#EBE6F4;
+      /* The two lanes. These are load-bearing: every element inherits the
+      colour of whichever half of the system produced it. */
+      --structured: #1E5AA8;
+      --structured-wash: #E2EBF6;
+      --meaning: #B8283F;
+      --meaning-wash: #F7E2E5;
 
-    --warn:#9A5B2A;
-    --warn-wash:#F6EBE1;
-  }
+      --warn: #9A5B2A;
+      --warn-wash: #F6EBE1;
 
-  *{box-sizing:border-box}
+      --radius: 7px;
+      --shadow-sm: 0 1px 2px rgba(16, 37, 29, .05);
+      --shadow-md: 0 2px 4px rgba(16, 37, 29, .04), 0 8px 20px -6px rgba(16, 37, 29, .10);
+      --shadow-lane-structured: 0 8px 20px -8px rgba(30, 90, 168, .28);
+      --shadow-lane-meaning: 0 8px 20px -8px rgba(184, 40, 63, .28);
+    }
 
-  html{ -webkit-text-size-adjust:100%; }
+    * {
+      box-sizing: border-box
+    }
 
-  body{
-    margin:0;
-    background:var(--base);
-    color:var(--ink);
-    font-family:'Archivo',system-ui,sans-serif;
-    font-size:16px;
-    line-height:1.5;
-    -webkit-font-smoothing:antialiased;
-  }
+    html {
+      -webkit-text-size-adjust: 100%;
+    }
 
-  .wrap{max-width:1000px;margin:0 auto;padding:28px 24px 96px}
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle, #DDE3E1 1px, transparent 1px) 0 0/22px 22px,
+        var(--base);
+      color: var(--ink);
+      font-family: 'Archivo', system-ui, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
 
-  /* ---------- masthead ---------- */
-  .top{
-    display:flex;align-items:baseline;justify-content:space-between;
-    gap:16px;flex-wrap:wrap;
-    padding-bottom:14px;border-bottom:1px solid var(--hair);
-  }
-  .mark{
-    font-family:'Archivo Expanded','Archivo',sans-serif;
-    font-weight:700;font-size:15px;letter-spacing:.02em;margin:0;
-  }
-  .mark span{font-weight:500;color:var(--muted)}
+    .spectrum {
+      height: 3px;
+      width: 100%;
+      background: linear-gradient(90deg, var(--structured), var(--meaning));
+    }
 
-  .schema-strip{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:12px;color:var(--muted);
-  }
-  .schema-strip b{color:var(--ink);font-weight:500}
+    .wrap {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 28px 24px 96px
+    }
 
-  /* ---------- ask ---------- */
-  .ask{padding:52px 0 8px;max-width:680px}
-  .ask h1{
-    font-family:'Archivo Expanded','Archivo',sans-serif;
-    font-weight:600;
-    font-size:clamp(28px,4.4vw,40px);
-    line-height:1.12;
-    letter-spacing:-.015em;
-    margin:0 0 10px;
-  }
-  .ask p{color:var(--muted);margin:0 0 26px;max-width:52ch}
+    /* ---------- masthead ---------- */
+    .top {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--hair);
+    }
 
-  .field{
-    display:flex;align-items:stretch;
-    background:var(--panel);
-    border:1.5px solid var(--ink);
-    border-radius:3px;
-  }
-  .field:focus-within{
-    outline:2px solid var(--structured);
-    outline-offset:2px;
-  }
-  .field input{
-    flex:1;min-width:0;
-    font:inherit;font-size:17px;color:var(--ink);
-    background:transparent;border:0;outline:0;
-    padding:15px 16px;
-  }
-  .field input::placeholder{color:#A7B2BB}
-  .field button{
-    font:inherit;font-weight:600;font-size:15px;
-    background:var(--ink);color:var(--base);
-    border:0;padding:0 22px;cursor:pointer;
-  }
-  .field button:hover{background:#0D1620}
-  .field button:disabled{background:var(--muted);cursor:progress}
-  .field button:focus-visible{outline:2px solid var(--structured);outline-offset:-4px}
+    .mark {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Archivo Expanded', 'Archivo', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: .02em;
+      margin: 0;
+      color: #1E5AA8;
+    }
 
-  .seeds{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}
-  .seeds button{
-    font:inherit;font-size:13px;color:var(--muted);
-    background:transparent;
-    border:1px solid var(--hair);border-radius:99px;
-    padding:5px 12px;cursor:pointer;
-  }
-  .seeds button:hover{border-color:var(--ink);color:var(--ink)}
-  .seeds button:focus-visible{outline:2px solid var(--structured);outline-offset:1px}
+    .mark span {
+      font-weight: 500;
+      color: #000000;
+    }
 
-  /* ---------- routing track (the hero) ---------- */
-  .track{
-    margin-top:44px;padding-top:22px;
-    border-top:1px solid var(--hair);
-  }
-  .track-head{
-    display:flex;justify-content:space-between;align-items:baseline;
-    font-size:13px;color:var(--muted);margin-bottom:18px;
-  }
-  .track-verdict{color:var(--ink);font-weight:600}
-  .track-verdict[data-lane="structured"]{color:var(--structured)}
-  .track-verdict[data-lane="meaning"]{color:var(--meaning)}
+    .mark-icon {
+      flex-shrink: 0
+    }
 
-  .lanes{display:grid;gap:11px}
-  .lane{display:grid;grid-template-columns:96px 1fr auto;align-items:center;gap:14px}
-  .lane-name{font-size:13.5px;color:var(--muted)}
-  .rail{position:relative;height:3px;background:var(--hair);border-radius:2px;overflow:hidden}
-  .rail i{
-    position:absolute;inset:0;
-    transform:scaleX(0);transform-origin:left;
-    transition:transform .5s cubic-bezier(.22,.7,.3,1);
-  }
-  .lane[data-on="1"] .rail i{transform:scaleX(1)}
-  .lane[data-lane="structured"] .rail i{background:var(--structured)}
-  .lane[data-lane="meaning"] .rail i{background:var(--meaning)}
-  .lane[data-on="1"] .lane-name{color:var(--ink)}
-  .lane-note{
-    font-family:'IBM Plex Mono',monospace;font-size:11.5px;
-    color:var(--muted);opacity:0;transition:opacity .35s ease .28s;
-    text-align:right;min-width:74px;
-  }
-  .lane[data-on="1"] .lane-note{opacity:1}
+    .schema-strip {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      color: var(--muted);
+    }
 
-  /* ---------- panels ---------- */
-  .out{margin-top:40px;display:grid;gap:22px}
+    .schema-strip b {
+      color: var(--ink);
+      font-weight: 500
+    }
 
-  .panel{background:var(--panel);border:1px solid var(--hair);border-radius:4px}
-  .panel > h2{
-    font-size:13px;font-weight:600;margin:0;
-    padding:12px 16px;border-bottom:1px solid var(--hair);
-    display:flex;justify-content:space-between;align-items:center;gap:12px;
-  }
-  .panel > h2 em{
-    font-style:normal;font-weight:400;font-size:12px;color:var(--muted);
-    font-family:'IBM Plex Mono',monospace;
-  }
-  .panel-body{padding:16px}
+    /* ---------- ask ---------- */
+    .ask {
+      padding: 52px 0 8px;
+      max-width: 680px
+    }
 
-  .panel[data-lane="structured"]{border-left:3px solid var(--structured)}
-  .panel[data-lane="structured"] > h2{background:var(--structured-wash);color:var(--structured)}
-  .panel[data-lane="meaning"]{border-left:3px solid var(--meaning)}
-  .panel[data-lane="meaning"] > h2{background:var(--meaning-wash);color:var(--meaning)}
-  .panel[data-lane="warn"]{border-left:3px solid var(--warn)}
-  .panel[data-lane="warn"] > h2{background:var(--warn-wash);color:var(--warn)}
+    .ask h1 {
+      font-family: 'Archivo Expanded', 'Archivo', sans-serif;
+      font-weight: 600;
+      font-size: clamp(28px, 4.4vw, 40px);
+      line-height: 1.12;
+      letter-spacing: -.015em;
+      margin: 0 0 10px;
+    }
 
-  pre.sql{
-    font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.65;
-    margin:0;white-space:pre-wrap;word-break:break-word;color:var(--ink);
-  }
+    .ask p {
+      color: var(--muted);
+      margin: 0 0 26px;
+      max-width: 52ch
+    }
 
-  .split{display:grid;gap:14px}
-  .split .bit{border-top:1px dashed var(--hair);padding-top:12px}
-  .split .bit:first-child{border-top:0;padding-top:0}
-  .bit-label{font-size:12px;color:var(--muted);margin-bottom:5px}
-  .bit code{font-family:'IBM Plex Mono',monospace;font-size:13px}
+    .field {
+      display: flex;
+      align-items: stretch;
+      background: var(--panel);
+      border: 1.5px solid var(--ink);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      transition: box-shadow .2s ease;
+      overflow: hidden;
+    }
 
-  /* results table */
-  .scroll{overflow-x:auto}
-  table{border-collapse:collapse;width:100%;font-size:13.5px}
-  th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--hair);white-space:nowrap}
-  th{
-    font-weight:600;font-size:12px;color:var(--muted);
-    position:sticky;top:0;background:var(--panel);
-  }
-  td{font-family:'IBM Plex Mono',monospace;font-size:12.5px}
-  tr:last-child td{border-bottom:0}
+    .field:focus-within {
+      outline: 2px solid var(--structured);
+      outline-offset: 2px;
+      box-shadow: var(--shadow-md), 0 0 0 4px var(--structured-wash);
+    }
 
-  /* semantic matches */
-  .match{border-top:1px solid var(--hair);padding:14px 0}
-  .match:first-child{border-top:0;padding-top:0}
-  .match:last-child{padding-bottom:0}
-  .match-top{display:flex;justify-content:space-between;gap:14px;align-items:baseline}
-  .match-who{font-size:13.5px;font-weight:500}
-  .match-who small{font-weight:400;color:var(--muted);margin-left:14px;font-size:12.5px}
-  .match-text{margin:7px 0 10px;font-size:14.5px;max-width:62ch}
-  .meter{display:flex;align-items:center;gap:9px}
-  .meter-bar{width:110px;height:5px;background:var(--hair);border-radius:3px;overflow:hidden}
-  .meter-bar i{display:block;height:100%;background:var(--meaning);border-radius:3px}
-  .meter-num{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted)}
+    .field input {
+      flex: 1;
+      min-width: 0;
+      font: inherit;
+      font-size: 17px;
+      color: var(--ink);
+      background: transparent;
+      border: 0;
+      outline: 0;
+      padding: 16px 18px;
+    }
 
-  /* states */
-  .note{color:var(--muted);font-size:14px;margin:0}
-  .note code{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink)}
+    .field input::placeholder {
+      color: #9DAFA6;
+    }
 
-  .hidden{display:none !important}
+    .field button {
+      font: inherit;
+      font-weight: 600;
+      font-size: 15px;
+      background: var(--ink);
+      color: var(--base);
+      border: 0;
+      padding: 0 24px;
+      cursor: pointer;
+      transition: background .15s ease;
+    }
 
-  .foot{
-    margin-top:64px;padding-top:16px;border-top:1px solid var(--hair);
-    display:flex;gap:20px;flex-wrap:wrap;
-    font-size:13px;color:var(--muted);
-  }
-  .foot a{color:var(--muted)}
-  .foot a:hover{color:var(--ink)}
+    .field button:hover {
+      background: #0C1A14;
+    }
 
-  @media (max-width:620px){
-    .wrap{padding:20px 16px 72px}
-    .ask{padding-top:34px}
-    .field{flex-direction:column}
-    .field button{padding:13px}
-    .lane{grid-template-columns:80px 1fr;row-gap:5px}
-    .lane-note{grid-column:2;text-align:left}
-    th,td{white-space:normal}
-  }
+    .field button:disabled {
+      background: var(--muted);
+      cursor: progress
+    }
 
-  @media (prefers-reduced-motion:reduce){
-    *{transition:none !important;animation:none !important}
-  }
+    .field button:focus-visible {
+      outline: 2px solid var(--structured);
+      outline-offset: -4px
+    }
 
-  /* ---------- dataset bar ---------- */
-  .dataset-bar{
-    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-    padding:12px 14px;margin-top:18px;
-    background:var(--panel);border:1px solid var(--hair);border-radius:4px;
-  }
-  .dataset-bar[data-kind="upload"]{border-left:3px solid var(--structured)}
-  .dataset-info{flex:1;min-width:200px;font-size:13px;color:var(--muted)}
-  .dataset-info b{color:var(--ink);font-weight:600}
-  .dataset-info .flag{
-    display:inline-block;margin-left:8px;padding:2px 8px;border-radius:99px;
-    font-size:11px;font-weight:600;background:var(--warn-wash);color:var(--warn);
-  }
-  .dataset-actions{display:flex;gap:8px;align-items:center;flex-shrink:0}
-  .dataset-actions label{
-    font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;
-    border:1px solid var(--ink);border-radius:3px;padding:7px 14px;
-    background:transparent;
-  }
-  .dataset-actions label:hover{background:var(--ink);color:var(--base)}
-  .dataset-actions input[type="file"]{display:none}
-  .dataset-actions button{
-    font:inherit;font-size:13px;color:var(--muted);
-    background:transparent;border:1px solid var(--hair);border-radius:3px;
-    padding:7px 12px;cursor:pointer;
-  }
-  .dataset-actions button:hover{border-color:var(--ink);color:var(--ink)}
-  .dataset-actions button:disabled{opacity:.5;cursor:progress}
-</style>
+    .seeds {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 15px
+    }
+
+    .seeds button {
+      font: inherit;
+      font-size: 13px;
+      color: var(--muted);
+      background: var(--panel);
+      border: 1px solid var(--hair);
+      border-radius: 99px;
+      box-shadow: var(--shadow-sm);
+      transition: border-color .15s ease, color .15s ease, transform .1s ease;
+      padding: 5px 12px;
+      cursor: pointer;
+    }
+
+    .seeds button:hover {
+      border-color: var(--ink);
+      color: var(--ink);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md)
+    }
+
+    .seeds button:focus-visible {
+      outline: 2px solid var(--structured);
+      outline-offset: 1px
+    }
+
+    /* ---------- routing track (the hero) ---------- */
+    .track {
+      margin-top: 44px;
+      padding-top: 22px;
+      border-top: 1px solid var(--hair);
+    }
+
+    .track-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    .track-verdict {
+      color: var(--ink);
+      font-weight: 600
+    }
+
+    .track-verdict[data-lane="structured"] {
+      color: var(--structured)
+    }
+
+    .track-verdict[data-lane="meaning"] {
+      color: var(--meaning)
+    }
+
+    .lanes {
+      display: grid;
+      gap: 11px
+    }
+
+    .lane {
+      display: grid;
+      grid-template-columns: 96px 1fr auto;
+      align-items: center;
+      gap: 14px
+    }
+
+    .lane-name {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13.5px;
+      color: var(--muted)
+    }
+
+    .lane-name svg {
+      flex-shrink: 0;
+      transition: color .3s ease
+    }
+
+    .rail {
+      position: relative;
+      height: 3px;
+      background: var(--hair);
+      border-radius: 2px;
+      overflow: hidden
+    }
+
+    .rail i {
+      position: absolute;
+      inset: 0;
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform .5s cubic-bezier(.22, .7, .3, 1);
+    }
+
+    .lane[data-on="1"] .rail i {
+      transform: scaleX(1)
+    }
+
+    .lane[data-lane="structured"] .rail i {
+      background: var(--structured)
+    }
+
+    .lane[data-lane="meaning"] .rail i {
+      background: var(--meaning)
+    }
+
+    .lane[data-on="1"] .lane-name {
+      color: var(--ink)
+    }
+
+    .lane[data-lane="structured"][data-on="1"] .lane-name svg {
+      color: var(--structured)
+    }
+
+    .lane[data-lane="meaning"][data-on="1"] .lane-name svg {
+      color: var(--meaning)
+    }
+
+    .lane-note {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11.5px;
+      color: var(--muted);
+      opacity: 0;
+      transition: opacity .35s ease .28s;
+      text-align: right;
+      min-width: 74px;
+    }
+
+    .lane[data-on="1"] .lane-note {
+      opacity: 1
+    }
+
+    /* ---------- panels ---------- */
+    .out {
+      margin-top: 40px;
+      display: grid;
+      gap: 22px
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--hair);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+    }
+
+    .panel>h2 {
+      font-size: 13px;
+      font-weight: 600;
+      margin: 0;
+      padding: 13px 16px;
+      border-bottom: 1px solid var(--hair);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .panel>h2 .htitle {
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .panel>h2 svg {
+      flex-shrink: 0
+    }
+
+    .panel>h2 em {
+      font-style: normal;
+      font-weight: 400;
+      font-size: 12px;
+      color: var(--muted);
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .panel-body {
+      padding: 17px
+    }
+
+    .panel[data-lane="structured"] {
+      border-left: 3px solid var(--structured);
+      box-shadow: var(--shadow-lane-structured)
+    }
+
+    .panel[data-lane="structured"]>h2 {
+      background: var(--structured-wash);
+      color: var(--structured)
+    }
+
+    .panel[data-lane="meaning"] {
+      border-left: 3px solid var(--meaning);
+      box-shadow: var(--shadow-lane-meaning)
+    }
+
+    .panel[data-lane="meaning"]>h2 {
+      background: var(--meaning-wash);
+      color: var(--meaning)
+    }
+
+    .panel[data-lane="warn"] {
+      border-left: 3px solid var(--warn)
+    }
+
+    .panel[data-lane="warn"]>h2 {
+      background: var(--warn-wash);
+      color: var(--warn)
+    }
+
+    pre.sql {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      line-height: 1.65;
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: var(--ink);
+    }
+
+    .split {
+      display: grid;
+      gap: 14px
+    }
+
+    .split .bit {
+      border-top: 1px dashed var(--hair);
+      padding-top: 12px
+    }
+
+    .split .bit:first-child {
+      border-top: 0;
+      padding-top: 0
+    }
+
+    .bit-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 5px
+    }
+
+    .bit code {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px
+    }
+
+    /* results table */
+    .scroll {
+      overflow-x: auto
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 13.5px
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--hair);
+      white-space: nowrap
+    }
+
+    th {
+      font-weight: 600;
+      font-size: 12px;
+      color: var(--muted);
+      position: sticky;
+      top: 0;
+      background: var(--panel);
+    }
+
+    td {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12.5px
+    }
+
+    tr:last-child td {
+      border-bottom: 0
+    }
+
+    /* semantic matches */
+    .match {
+      border-top: 1px solid var(--hair);
+      padding: 14px 0
+    }
+
+    .match:first-child {
+      border-top: 0;
+      padding-top: 0
+    }
+
+    .match:last-child {
+      padding-bottom: 0
+    }
+
+    .match-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: baseline
+    }
+
+    .match-who {
+      font-size: 13.5px;
+      font-weight: 500
+    }
+
+    .match-who small {
+      font-weight: 400;
+      color: var(--muted);
+      margin-left: 14px;
+      font-size: 12.5px
+    }
+
+    .match-text {
+      margin: 7px 0 10px;
+      font-size: 14.5px;
+      max-width: 62ch
+    }
+
+    .meter {
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .meter-bar {
+      width: 114px;
+      height: 6px;
+      background: var(--hair);
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 1px rgba(22, 32, 43, .06)
+    }
+
+    .meter-bar i {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, #8A6BC2, var(--meaning));
+      border-radius: 4px
+    }
+
+    .meter-num {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11.5px;
+      color: var(--muted);
+      min-width: 38px;
+      text-align: right
+    }
+
+    /* states */
+    .note {
+      color: var(--muted);
+      font-size: 14px;
+      margin: 0
+    }
+
+    .note code {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      color: var(--ink)
+    }
+
+    .hidden {
+      display: none !important
+    }
+
+    .foot {
+      margin-top: 68px;
+      padding-top: 18px;
+      border-top: 1px solid var(--hair);
+      display: flex;
+      gap: 22px;
+      flex-wrap: wrap;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .foot a {
+      color: var(--muted);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: color .15s ease, border-color .15s ease
+    }
+
+    .foot a:hover {
+      color: var(--ink);
+      border-color: var(--hair)
+    }
+
+    @media (max-width:620px) {
+      .wrap {
+        padding: 20px 16px 72px
+      }
+
+      .ask {
+        padding-top: 34px
+      }
+
+      .field {
+        flex-direction: column
+      }
+
+      .field button {
+        padding: 13px
+      }
+
+      .lane {
+        grid-template-columns: 80px 1fr;
+        row-gap: 5px
+      }
+
+      .lane-note {
+        grid-column: 2;
+        text-align: left
+      }
+
+      th,
+      td {
+        white-space: normal
+      }
+    }
+
+    @media (prefers-reduced-motion:reduce) {
+      * {
+        transition: none !important;
+        animation: none !important
+      }
+    }
+
+    /* ---------- dataset bar ---------- */
+    .dataset-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 13px 16px;
+      margin-top: 20px;
+      background: var(--panel);
+      border: 1px solid var(--hair);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .dataset-bar[data-kind="upload"] {
+      border-left: 3px solid var(--structured);
+      box-shadow: var(--shadow-lane-structured)
+    }
+
+    .dataset-info {
+      flex: 1;
+      min-width: 200px;
+      font-size: 13px;
+      color: var(--muted)
+    }
+
+    .dataset-info b {
+      color: var(--ink);
+      font-weight: 600
+    }
+
+    .dataset-info .flag {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--warn-wash);
+      color: var(--warn);
+    }
+
+    .dataset-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-shrink: 0
+    }
+
+    .dataset-actions label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      cursor: pointer;
+      border: 1px solid var(--ink);
+      border-radius: 6px;
+      padding: 8px 15px;
+      background: var(--panel);
+      box-shadow: var(--shadow-sm);
+      transition: background .15s ease, color .15s ease;
+    }
+
+    .dataset-actions label:hover {
+      background: var(--ink);
+      color: var(--base)
+    }
+
+    .dataset-actions input[type="file"] {
+      display: none
+    }
+
+    .dataset-actions button {
+      font: inherit;
+      font-size: 13px;
+      color: var(--muted);
+      background: var(--panel);
+      border: 1px solid var(--hair);
+      border-radius: 6px;
+      padding: 8px 13px;
+      cursor: pointer;
+      transition: border-color .15s ease, color .15s ease;
+    }
+
+    .dataset-actions button:hover {
+      border-color: var(--ink);
+      color: var(--ink)
+    }
+
+    .dataset-actions button:disabled {
+      opacity: .5;
+      cursor: progress
+    }
+  </style>
 </head>
+
 <body>
-<div class="wrap">
+  <div class="spectrum"></div>
+  <div class="wrap">
 
-  <header class="top">
-    <p class="mark">dm your data <span>— hybrid query</span></p>
-    <p class="schema-strip" id="schemaStrip">reading schema…</p>
-  </header>
+    <header class="top">
+      <p class="mark">
+        <svg class="mark-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <rect x="1" y="1" width="8" height="18" rx="1.4" stroke="var(--structured)" stroke-width="1.5" />
+          <path d="M1 6.5h8M1 13.5h8M5 1v18" stroke="var(--structured)" stroke-width="1.1" />
+          <circle cx="15" cy="10" r="1.6" fill="var(--meaning)" />
+          <ellipse cx="15" cy="10" rx="4.4" ry="1.9" stroke="var(--meaning)" stroke-width="1.3" />
+          <ellipse cx="15" cy="10" rx="1.9" ry="4.4" stroke="var(--meaning)" stroke-width="1.3" />
+        </svg>
+        DM Your Data<span> - Query both Numerical and Textual Data</span>
+      </p>
+      <p class="schema-strip" id="schemaStrip">reading schema…</p>
+    </header>
 
-  <div class="dataset-bar" id="datasetBar" data-kind="seed">
-    <p class="dataset-info" id="datasetInfo">Loading dataset info…</p>
-    <div class="dataset-actions">
-      <label for="csvFile">Upload CSV</label>
-      <input type="file" id="csvFile" accept=".csv">
-      <button type="button" id="resetBtn" style="display:none">Use sample data</button>
+    <div class="dataset-bar" id="datasetBar" data-kind="seed">
+      <p class="dataset-info" id="datasetInfo">Loading dataset info…</p>
+      <div class="dataset-actions">
+        <label for="csvFile">Upload CSV</label>
+        <input type="file" id="csvFile" accept=".csv">
+        <button type="button" id="resetBtn" style="display:none">Use sample data</button>
+      </div>
     </div>
+
+    <section class="ask">
+      <h1>Ask your database a question.</h1>
+      <p>Type it the way you'd say it out loud. Questions that need exact numbers become SQL; questions about meaning
+        become a vector search; some need both.</p>
+
+      <div class="field">
+        <input id="q" type="text" autocomplete="off" placeholder="frustrated customers in the West region"
+          aria-label="Your question">
+        <button id="go" type="button">Ask</button>
+      </div>
+
+      <div class="seeds" id="seeds"></div>
+    </section>
+
+
+    <!-- the hero: which way the question was routed -->
+    <section class="track" aria-live="polite">
+      <div class="track-head">
+        <span>Routing</span>
+        <span class="track-verdict" id="verdict">waiting for a question</span>
+      </div>
+      <div class="lanes">
+        <div class="lane" data-lane="structured" id="laneSql" data-on="0">
+          <span class="lane-name">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+              <rect x="1" y="1" width="11" height="11" rx="1.2" stroke="currentColor" stroke-width="1.3" />
+              <path d="M1 5h11M1 9h11M5 1v11" stroke="currentColor" stroke-width="1.1" />
+            </svg>
+            Structured
+          </span>
+          <span class="rail"><i></i></span>
+          <span class="lane-note" id="noteSql">SQL</span>
+        </div>
+        <div class="lane" data-lane="meaning" id="laneSem" data-on="0">
+          <span class="lane-name">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+              <circle cx="6.5" cy="6.5" r="1.4" fill="currentColor" />
+              <ellipse cx="6.5" cy="6.5" rx="5.5" ry="2.3" stroke="currentColor" stroke-width="1.2" />
+              <ellipse cx="6.5" cy="6.5" rx="2.3" ry="5.5" stroke="currentColor" stroke-width="1.2" />
+            </svg>
+            Meaning
+          </span>
+          <span class="rail"><i></i></span>
+          <span class="lane-note" id="noteSem">vectors</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="out" id="out">
+      <div class="panel">
+        <h2>Results</h2>
+        <div class="panel-body">
+          <p class="note">Nothing asked yet. Pick one of the examples above, or write your own - try counting something,
+            or describing a feeling you'd expect to find in a review.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <a href="/schema">schema</a>
+      <a href="/profile">profile</a>
+      <a href="/health">health</a>
+    </footer>
+
   </div>
 
-  <section class="ask">
-    <h1>Ask your database a question.</h1>
-    <p>Type it the way you'd say it out loud. Questions that need exact numbers become SQL; questions about meaning become a vector search; some need both.</p>
+  <script>
+    const SEED_SETS = {
+      seed: [
+        "What is the average price by category?",
+        "How many reviews came from the West region?",
+        "Number of reviews expressing frustration",
+        "How many products have battery life issues",
+        "Number of frustrated customers in the North region"
+      ]
+    };
 
-    <div class="field">
-      <input id="q" type="text" autocomplete="off"
-             placeholder="frustrated customers in the West region"
-             aria-label="Your question">
-      <button id="go" type="button">Ask</button>
-    </div>
+    const qEl = document.getElementById('q');
+    const goEl = document.getElementById('go');
+    const outEl = document.getElementById('out');
+    const verdictEl = document.getElementById('verdict');
+    const laneSql = document.getElementById('laneSql');
+    const laneSem = document.getElementById('laneSem');
+    const noteSql = document.getElementById('noteSql');
+    const noteSem = document.getElementById('noteSem');
+    const seedsEl = document.getElementById('seeds');
+    const datasetBar = document.getElementById('datasetBar');
+    const datasetInfo = document.getElementById('datasetInfo');
+    const csvFile = document.getElementById('csvFile');
+    const resetBtn = document.getElementById('resetBtn');
 
-    <div class="seeds" id="seeds"></div>
-  </section>
+    // Tracks which column holds the text / row id for the CURRENT active dataset,
+    // so match rendering works for an uploaded CSV as well as the seed data -
+    // see matchesHtml(), which reads these instead of hardcoded column names.
+    let activeTextColumn = 'review_text';
+    let activeIdColumn = 'id';
 
-
-  <!-- the hero: which way the question was routed -->
-  <section class="track" aria-live="polite">
-    <div class="track-head">
-      <span>Routing</span>
-      <span class="track-verdict" id="verdict">waiting for a question</span>
-    </div>
-    <div class="lanes">
-      <div class="lane" data-lane="structured" id="laneSql" data-on="0">
-        <span class="lane-name">Structured</span>
-        <span class="rail"><i></i></span>
-        <span class="lane-note" id="noteSql">SQL</span>
-      </div>
-      <div class="lane" data-lane="meaning" id="laneSem" data-on="0">
-        <span class="lane-name">Meaning</span>
-        <span class="rail"><i></i></span>
-        <span class="lane-note" id="noteSem">vectors</span>
-      </div>
-    </div>
-  </section>
-
-  <section class="out" id="out">
-    <div class="panel">
-      <h2>Results</h2>
-      <div class="panel-body">
-        <p class="note">Nothing asked yet. Pick one of the examples above, or write your own — try counting something, or describing a feeling you'd expect to find in a review.</p>
-      </div>
-    </div>
-  </section>
-
-  <footer class="foot">
-    <a href="/schema">schema</a>
-    <a href="/profile">profile</a>
-    <a href="/health">health</a>
-  </footer>
-
-</div>
-
-<script>
-const SEED_SETS = {
-  seed: [
-    "What is the average price by category?",
-    "How many reviews came from the West region?",
-    "reviews expressing frustration",
-    "products with battery life issues",
-    "frustrated customers in the North region"
-  ]
-};
-
-const qEl = document.getElementById('q');
-const goEl = document.getElementById('go');
-const outEl = document.getElementById('out');
-const verdictEl = document.getElementById('verdict');
-const laneSql = document.getElementById('laneSql');
-const laneSem = document.getElementById('laneSem');
-const noteSql = document.getElementById('noteSql');
-const noteSem = document.getElementById('noteSem');
-const seedsEl = document.getElementById('seeds');
-const datasetBar = document.getElementById('datasetBar');
-const datasetInfo = document.getElementById('datasetInfo');
-const csvFile = document.getElementById('csvFile');
-const resetBtn = document.getElementById('resetBtn');
-
-// Tracks which column holds the text / row id for the CURRENT active dataset,
-// so match rendering works for an uploaded CSV as well as the seed data —
-// see matchesHtml(), which reads these instead of hardcoded column names.
-let activeTextColumn = 'review_text';
-let activeIdColumn = 'id';
-
-function esc(s){
-  return String(s ?? '').replace(/[&<>"']/g, c => (
-    {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
-  ));
-}
-
-function renderSeeds(list){
-  seedsEl.innerHTML = '';
-  list.forEach(s => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.textContent = s;
-    b.onclick = () => { qEl.value = s; ask(); };
-    seedsEl.appendChild(b);
-  });
-}
-
-/* Seed questions built from the columns of whatever's actually loaded —
-   generic on purpose, since we don't know the semantics of an uploaded CSV. */
-function seedsForUpload(meta){
-  const cols = meta.columns || [];
-  const list = [`How many rows are in ${meta.table}?`];
-  const numericGuess = cols.find(c => /price|amount|value|count|total|score|rating|qty|quantity/i.test(c));
-  if(numericGuess) list.push(`What is the average ${numericGuess}?`);
-  if(meta.text_column) list.push(`Find rows about — try your own topic here`);
-  if(cols.length > 1) list.push(`Show the first 5 rows`);
-  return list;
-}
-
-/* ---------- schema strip ---------- */
-function refreshSchemaStrip(){
-  fetch('/schema').then(r => r.json()).then(s => {
-    const tables = Object.keys(s).filter(t => !t.endsWith('_embeddings'));
-    const txt = tables.map(t => `<b>${esc(t)}</b> ${s[t].length} cols`).join('&nbsp;&nbsp;&nbsp;');
-    document.getElementById('schemaStrip').innerHTML = txt || 'no tables found';
-  }).catch(() => {
-    document.getElementById('schemaStrip').textContent = 'schema unavailable — is the database reachable?';
-  });
-}
-
-/* ---------- dataset bar ---------- */
-function refreshDatasetBar(){
-  fetch('/active-dataset').then(r => r.json()).then(meta => {
-    activeTextColumn = meta.text_column || null;
-    activeIdColumn = meta.id_column || 'id';
-
-    if(meta.is_upload){
-      datasetBar.dataset.kind = 'upload';
-      const semanticNote = meta.text_column
-        ? `semantic search on <b>${esc(meta.text_column)}</b>`
-        : `<span class="flag">SQL only — no text column found</span>`;
-      datasetInfo.innerHTML = `Active: <b>${esc(meta.source_filename)}</b> — ${meta.row_count} rows, ${meta.columns.length} columns. ${semanticNote}`;
-      resetBtn.style.display = '';
-      renderSeeds(seedsForUpload(meta));
-    } else {
-      datasetBar.dataset.kind = 'seed';
-      datasetInfo.innerHTML = `Active: <b>sample data</b> (product reviews) — upload your own CSV to replace it.`;
-      resetBtn.style.display = 'none';
-      renderSeeds(SEED_SETS.seed);
+    function esc(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+      ));
     }
-  }).catch(() => {
-    datasetInfo.textContent = 'Could not load dataset info.';
-    renderSeeds(SEED_SETS.seed);
-  });
-}
 
-function datasetMessage(kind, title, bodyHtml){
-  // reuses the same panel language as query results, so an upload error
-  // looks and behaves like every other error in the app, not a different system
-  const existing = document.getElementById('datasetMsg');
-  if(existing) existing.remove();
-  const div = document.createElement('div');
-  div.id = 'datasetMsg';
-  div.style.marginTop = '10px';
-  div.innerHTML = panel(kind, title, null, bodyHtml);
-  datasetBar.insertAdjacentElement('afterend', div);
-}
-
-csvFile.addEventListener('change', async () => {
-  const file = csvFile.files[0];
-  if(!file) return;
-
-  datasetInfo.textContent = `Uploading ${file.name}… parsing, then embedding any text column. This can take a moment.`;
-  const existingMsg = document.getElementById('datasetMsg');
-  if(existingMsg) existingMsg.remove();
-
-  const form = new FormData();
-  form.append('file', file);
-
-  try{
-    const res = await fetch('/upload', { method: 'POST', body: form });
-    const data = await res.json();
-
-    if(data.success){
-      refreshDatasetBar();
-      refreshSchemaStrip();
-      datasetMessage('structured', 'Dataset loaded', `<p class="note">
-        <b>${esc(data.row_count)}</b> rows loaded as <code>${esc(data.table)}</code>.
-        ${data.text_column
-          ? `Embedded <b>${esc(data.embedded_row_count)}</b> rows from <code>${esc(data.text_column)}</code> for semantic search.`
-          : `No column looked like free text, so semantic and hybrid questions are disabled for this dataset — structured questions still work normally.`}
-      </p>`);
-    } else {
-      refreshDatasetBar();
-      datasetMessage('warn', "That file didn't load", `<p class="note">${esc(data.error)}</p>`);
+    function renderSeeds(list) {
+      seedsEl.innerHTML = '';
+      list.forEach(s => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = s;
+        b.onclick = () => { qEl.value = s; ask(); };
+        seedsEl.appendChild(b);
+      });
     }
-  } catch(err){
-    refreshDatasetBar();
-    datasetMessage('warn', 'Upload failed', `<p class="note">${esc(err.message)}</p>`);
-  } finally {
-    csvFile.value = '';
-  }
-});
 
-resetBtn.addEventListener('click', async () => {
-  resetBtn.disabled = true;
-  try{
-    await fetch('/reset-dataset', { method: 'POST' });
-    const existingMsg = document.getElementById('datasetMsg');
-    if(existingMsg) existingMsg.remove();
+    /* Seed questions built from the columns of whatever's actually loaded -
+       generic on purpose, since we don't know the semantics of an uploaded CSV. */
+    function seedsForUpload(meta) {
+      const cols = meta.columns || [];
+      const list = [`How many rows are in ${meta.table}?`];
+      const numericGuess = cols.find(c => /price|amount|value|count|total|score|rating|qty|quantity/i.test(c));
+      if (numericGuess) list.push(`What is the average ${numericGuess}?`);
+      if (meta.text_column) list.push(`Find rows about - try your own topic here`);
+      if (cols.length > 1) list.push(`Show the first 5 rows`);
+      return list;
+    }
+
+    /* ---------- schema strip ---------- */
+    function refreshSchemaStrip() {
+      fetch('/schema').then(r => r.json()).then(s => {
+        const tables = Object.keys(s).filter(t => !t.endsWith('_embeddings'));
+        const txt = tables.map(t => `<b>${esc(t)}</b> ${s[t].length} cols`).join('&nbsp;&nbsp;&nbsp;');
+        document.getElementById('schemaStrip').innerHTML = txt || 'no tables found';
+      }).catch(() => {
+        document.getElementById('schemaStrip').textContent = 'schema unavailable - is the database reachable?';
+      });
+    }
+
+    /* ---------- dataset bar ---------- */
+    function refreshDatasetBar() {
+      fetch('/active-dataset').then(r => r.json()).then(meta => {
+        activeTextColumn = meta.text_column || null;
+        activeIdColumn = meta.id_column || 'id';
+
+        if (meta.is_upload) {
+          datasetBar.dataset.kind = 'upload';
+          const semanticNote = meta.text_column
+            ? `semantic search on <b>${esc(meta.text_column)}</b>`
+            : `<span class="flag">SQL only - no text column found</span>`;
+          datasetInfo.innerHTML = `Active: <b>${esc(meta.source_filename)}</b> - ${meta.row_count} rows, ${meta.columns.length} columns. ${semanticNote}`;
+          resetBtn.style.display = '';
+          renderSeeds(seedsForUpload(meta));
+        } else {
+          datasetBar.dataset.kind = 'seed';
+          datasetInfo.innerHTML = `Active: <b>sample data</b> (product reviews) - upload your own CSV to replace it.`;
+          resetBtn.style.display = 'none';
+          renderSeeds(SEED_SETS.seed);
+        }
+      }).catch(() => {
+        datasetInfo.textContent = 'Could not load dataset info.';
+        renderSeeds(SEED_SETS.seed);
+      });
+    }
+
+    function datasetMessage(kind, title, bodyHtml) {
+      // reuses the same panel language as query results, so an upload error
+      // looks and behaves like every other error in the app, not a different system
+      const existing = document.getElementById('datasetMsg');
+      if (existing) existing.remove();
+      const div = document.createElement('div');
+      div.id = 'datasetMsg';
+      div.style.marginTop = '10px';
+      div.innerHTML = panel(kind, title, null, bodyHtml);
+      datasetBar.insertAdjacentElement('afterend', div);
+    }
+
+    csvFile.addEventListener('change', async () => {
+      const file = csvFile.files[0];
+      if (!file) return;
+
+      datasetInfo.textContent = `Uploading ${file.name}… parsing, then embedding any text column. This can take a moment.`;
+      const existingMsg = document.getElementById('datasetMsg');
+      if (existingMsg) existingMsg.remove();
+
+      const form = new FormData();
+      form.append('file', file);
+
+      try {
+        const res = await fetch('/upload', { method: 'POST', body: form });
+        const data = await res.json();
+
+        if (data.success) {
+          refreshDatasetBar();
+          refreshSchemaStrip();
+
+          let body;
+          if (data.text_column) {
+            body = `<p class="note"><b>${esc(data.row_count)}</b> rows loaded as <code>${esc(data.table)}</code>.
+          Embedded <b>${esc(data.embedded_row_count)}</b> rows from <code>${esc(data.text_column)}</code> for semantic search.</p>`;
+          } else if (data.embedding_error) {
+            // Table load succeeded - this is NOT a failed upload. Only the embedding
+            // step broke, so say exactly that instead of a generic error.
+            body = `<p class="note"><b>${esc(data.row_count)}</b> rows loaded as <code>${esc(data.table)}</code> and are queryable now.
+          Semantic search could not be set up for <code>${esc(data.detected_text_column)}</code>: <code>${esc(data.embedding_error)}</code></p>
+          <p class="note" style="margin-top:8px">Structured questions work normally. Try re-uploading if this looks like a one-off issue (e.g. the local model was busy).</p>`;
+          } else {
+            body = `<p class="note"><b>${esc(data.row_count)}</b> rows loaded as <code>${esc(data.table)}</code>.
+          No column looked like free text, so semantic and hybrid questions are disabled for this dataset, structured questions still work normally.</p>`;
+          }
+          datasetMessage(data.embedding_error ? 'warn' : 'structured', 'Dataset loaded', body);
+        } else {
+          refreshDatasetBar();
+          datasetMessage('warn', "That file didn't load", `<p class="note">${esc(data.error)}</p>`);
+        }
+      } catch (err) {
+        refreshDatasetBar();
+        datasetMessage('warn', 'Upload failed', `<p class="note">${esc(err.message)}</p>`);
+      } finally {
+        csvFile.value = '';
+      }
+    });
+
+    resetBtn.addEventListener('click', async () => {
+      resetBtn.disabled = true;
+      try {
+        await fetch('/reset-dataset', { method: 'POST' });
+        const existingMsg = document.getElementById('datasetMsg');
+        if (existingMsg) existingMsg.remove();
+        refreshDatasetBar();
+        refreshSchemaStrip();
+      } finally {
+        resetBtn.disabled = false;
+      }
+    });
+
     refreshDatasetBar();
     refreshSchemaStrip();
-  } finally {
-    resetBtn.disabled = false;
-  }
-});
 
-refreshDatasetBar();
-refreshSchemaStrip();
+    /* ---------- routing track ---------- */
 
-/* ---------- routing track ---------- */
+    function setLanes(route, method) {
+      const sql = (route === 'sql' || route === 'hybrid');
+      const sem = (route === 'semantic' || route === 'hybrid');
+      laneSql.dataset.on = sql ? '1' : '0';
+      laneSem.dataset.on = sem ? '1' : '0';
+      noteSql.textContent = sql ? 'generating SQL' : '-';
+      noteSem.textContent = sem ? 'cosine search' : '-';
 
-function setLanes(route, method){
-  const sql = (route === 'sql' || route === 'hybrid');
-  const sem = (route === 'semantic' || route === 'hybrid');
-  laneSql.dataset.on = sql ? '1' : '0';
-  laneSem.dataset.on = sem ? '1' : '0';
-  noteSql.textContent = sql ? 'generating SQL' : '—';
-  noteSem.textContent = sem ? 'cosine search' : '—';
+      const label = { sql: 'Structured only', semantic: 'Meaning only', hybrid: 'Both lanes' }[route] || route;
+      verdictEl.textContent = `${label}, decided by ${method}`;
+      verdictEl.dataset.lane = route === 'hybrid' ? '' : (route === 'sql' ? 'structured' : 'meaning');
+    }
 
-  const label = {sql:'Structured only', semantic:'Meaning only', hybrid:'Both lanes'}[route] || route;
-  verdictEl.textContent = `${label}, decided by ${method}`;
-  verdictEl.dataset.lane = route === 'hybrid' ? '' : (route === 'sql' ? 'structured' : 'meaning');
-}
+    function resetLanes(msg) {
+      laneSql.dataset.on = '0';
+      laneSem.dataset.on = '0';
+      verdictEl.textContent = msg;
+      verdictEl.dataset.lane = '';
+    }
 
-function resetLanes(msg){
-  laneSql.dataset.on = '0';
-  laneSem.dataset.on = '0';
-  verdictEl.textContent = msg;
-  verdictEl.dataset.lane = '';
-}
+    /* ---------- renderers ---------- */
+    const LANE_ICONS = {
+      structured: `<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="1" width="11" height="11" rx="1.2" stroke="currentColor" stroke-width="1.3"/><path d="M1 5h11M1 9h11M5 1v11" stroke="currentColor" stroke-width="1.1"/></svg>`,
+      meaning: `<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="1.4" fill="currentColor"/><ellipse cx="6.5" cy="6.5" rx="5.5" ry="2.3" stroke="currentColor" stroke-width="1.2"/><ellipse cx="6.5" cy="6.5" rx="2.3" ry="5.5" stroke="currentColor" stroke-width="1.2"/></svg>`,
+      warn: `<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1.5 12 11.5H1z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M6.5 5v3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="6.5" cy="9.6" r=".6" fill="currentColor"/></svg>`,
+    };
 
-/* ---------- renderers ---------- */
-function panel(lane, title, meta, bodyHtml){
-  return `<div class="panel"${lane ? ` data-lane="${lane}"` : ''}>
-    <h2>${esc(title)}${meta ? `<em>${esc(meta)}</em>` : ''}</h2>
+    function panel(lane, title, meta, bodyHtml) {
+      const icon = lane && LANE_ICONS[lane] ? LANE_ICONS[lane] : '';
+      return `<div class="panel"${lane ? ` data-lane="${lane}"` : ''}>
+    <h2><span class="htitle">${icon}${esc(title)}</span>${meta ? `<em>${esc(meta)}</em>` : ''}</h2>
     <div class="panel-body">${bodyHtml}</div>
   </div>`;
-}
+    }
 
-function tableHtml(cols, rows){
-  if(!rows.length) return `<p class="note">The query ran and matched nothing. Try widening it — a different region, or a lower rating threshold.</p>`;
-  return `<div class="scroll"><table>
+    function tableHtml(cols, rows) {
+      if (!rows.length) return `<p class="note">The query ran and matched nothing. Try widening it - a different region, or a lower rating threshold.</p>`;
+      return `<div class="scroll"><table>
     <thead><tr>${cols.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead>
     <tbody>${rows.map(r => `<tr>${r.map(v => `<td>${esc(v)}</td>`).join('')}</tr>`).join('')}</tbody>
   </table></div>`;
-}
+    }
 
-function matchesHtml(rows){
-  if(!rows.length) return `<p class="note">No row landed close enough to count as a match. Rephrase using words the source text would actually contain.</p>`;
+    function matchesHtml(rows) {
+      if (!rows.length) return `<p class="note">No row landed close enough to count as a match. Rephrase using words the source text would actually contain.</p>`;
 
-  const textCol = activeTextColumn || 'review_text'; // seed-data fallback if dataset info hasn't loaded yet
-  const skip = new Set(['distance', textCol, activeIdColumn]);
+      const textCol = activeTextColumn || 'review_text'; // seed-data fallback if dataset info hasn't loaded yet
+      const skip = new Set(['distance', textCol, activeIdColumn]);
 
-  return rows.map(r => {
-    // distance 0 = identical, 2 = opposite. Show closeness, which is what you judge.
-    const d = Number(r.distance);
-    const pct = Math.max(0, Math.min(100, (1 - d / 2) * 100));
+      return rows.map(r => {
+        // distance 0 = identical, 2 = opposite. Show closeness, which is what you judge.
+        const d = Number(r.distance);
+        const pct = Math.max(0, Math.min(100, (1 - d / 2) * 100));
 
-    const badges = Object.keys(r)
-      .filter(k => !skip.has(k) && r[k] !== null && r[k] !== undefined)
-      .slice(0, 3)
-      .map(k => `<small>${esc(r[k])}</small>`)
-      .join('');
+        const badges = Object.keys(r)
+          .filter(k => !skip.has(k) && r[k] !== null && r[k] !== undefined)
+          .slice(0, 3)
+          .map(k => `<small>${esc(r[k])}</small>`)
+          .join('');
 
-    return `<div class="match">
+        return `<div class="match">
       <div class="match-top">
         <span class="match-who">Row ${esc(r[activeIdColumn])}${badges}</span>
         <span class="meter">
@@ -551,97 +1062,98 @@ function matchesHtml(rows){
       </div>
       <p class="match-text">${esc(r[textCol])}</p>
     </div>`;
-  }).join('');
-}
-
-function render(data){
-  const route = data.route;
-  let html = '';
-
-  if(route === 'sql'){
-    if(data.success){
-      html += panel('structured', 'The SQL it wrote', `${data.attempts} attempt${data.attempts>1?'s':''}`,
-        `<pre class="sql">${esc(data.sql)}</pre>`);
-      html += panel('structured', 'Results', `${data.row_count} row${data.row_count===1?'':'s'}`,
-        tableHtml(data.columns, data.rows));
-    } else {
-      html += panel('warn', "That SQL didn't run", null,
-        `<pre class="sql">${esc(data.sql || '—')}</pre>
-         <p class="note" style="margin-top:12px">Postgres said: <code>${esc(data.error)}</code></p>
-         <p class="note" style="margin-top:8px">Name the column you mean and ask again — "average <em>price</em> by category" lands better than "average cost".</p>`);
+      }).join('');
     }
-  }
 
-  else if(route === 'semantic'){
-    html += panel('meaning', 'Closest in meaning', `${data.result_count} of ${data.raw_result_count} kept`,
-      matchesHtml(data.results));
-  }
+    function render(data) {
+      const route = data.route;
+      let html = '';
 
-  else if(route === 'hybrid'){
-    const bits = `<div class="split">
+      if (route === 'sql') {
+        if (data.success) {
+          html += panel('structured', 'The SQL it wrote', `${data.attempts} attempt${data.attempts > 1 ? 's' : ''}`,
+            `<pre class="sql">${esc(data.sql)}</pre>`);
+          html += panel('structured', 'Results', `${data.row_count} row${data.row_count === 1 ? '' : 's'}`,
+            tableHtml(data.columns, data.rows));
+        } else {
+          html += panel('warn', "That SQL didn't run", null,
+            `<pre class="sql">${esc(data.sql || '-')}</pre>
+         <p class="note" style="margin-top:12px">Postgres said: <code>${esc(data.error)}</code></p>
+         <p class="note" style="margin-top:8px">Name the column you mean and ask again - "average <em>price</em> by category" lands better than "average cost".</p>`);
+        }
+      }
+
+      else if (route === 'semantic') {
+        html += panel('meaning', 'Closest in meaning', `${data.result_count} of ${data.raw_result_count} kept`,
+          matchesHtml(data.results));
+      }
+
+      else if (route === 'hybrid') {
+        const bits = `<div class="split">
       <div class="bit">
         <div class="bit-label">Filtered on</div>
-        <code>${esc(data.filter_sql || 'nothing — no structured filter found')}</code>
+        <code>${esc(data.filter_sql || 'nothing - no structured filter found')}</code>
       </div>
       <div class="bit">
         <div class="bit-label">Then ranked by closeness to</div>
         <code>${esc(data.semantic_query)}</code>
       </div>
     </div>`;
-    html += panel('structured', 'How it split the question', null, bits);
-    if(data.filter_error){
-      html += panel('warn', 'The filter was dropped', null,
-        `<p class="note">${esc(data.filter_error)}</p>
+        html += panel('structured', 'How it split the question', null, bits);
+        if (data.filter_error) {
+          html += panel('warn', 'The filter was dropped', null,
+            `<p class="note">${esc(data.filter_error)}</p>
          <p class="note" style="margin-top:8px">Results below ignore the filter and rank the whole table by meaning.</p>`);
+        }
+        html += panel('meaning', 'Closest in meaning', `${data.result_count} match${data.result_count === 1 ? '' : 'es'}`,
+          matchesHtml(data.results));
+      }
+
+      outEl.innerHTML = html;
     }
-    html += panel('meaning', 'Closest in meaning', `${data.result_count} match${data.result_count===1?'':'es'}`,
-      matchesHtml(data.results));
-  }
 
-  outEl.innerHTML = html;
-}
+    /* ---------- ask ---------- */
+    async function ask() {
+      const question = qEl.value.trim();
+      if (!question) { qEl.focus(); return; }
 
-/* ---------- ask ---------- */
-async function ask(){
-  const question = qEl.value.trim();
-  if(!question) { qEl.focus(); return; }
+      goEl.disabled = true;
+      goEl.textContent = 'Asking';
+      resetLanes('working out where this goes…');
+      outEl.innerHTML = panel(null, 'Results', null,
+        `<p class="note">Routing the question, then running it. Local models take a few seconds.</p>`);
 
-  goEl.disabled = true;
-  goEl.textContent = 'Asking';
-  resetLanes('working out where this goes…');
-  outEl.innerHTML = panel(null, 'Results', null,
-    `<p class="note">Routing the question, then running it. Local models take a few seconds.</p>`);
+      try {
+        const res = await fetch('/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question })
+        });
+        const data = await res.json();
 
-  try{
-    const res = await fetch('/ask', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({question})
-    });
-    const data = await res.json();
-
-    if(data.route){
-      setLanes(data.route, data.route_method || '—');
-      render(data);
-    } else {
-      resetLanes('could not route this one');
-      outEl.innerHTML = panel('warn', 'Nothing ran', null,
-        `<p class="note">${esc(data.error || 'The server returned no route.')}</p>`);
-    }
-  } catch(err){
-    resetLanes('no answer from the server');
-    outEl.innerHTML = panel('warn', 'The server is not responding', null,
-      `<p class="note">${esc(err.message)}</p>
+        if (data.route) {
+          setLanes(data.route, data.route_method || '-');
+          render(data);
+        } else {
+          resetLanes('could not route this one');
+          outEl.innerHTML = panel('warn', 'Nothing ran', null,
+            `<p class="note">${esc(data.error || 'The server returned no route.')}</p>`);
+        }
+      } catch (err) {
+        resetLanes('no answer from the server');
+        outEl.innerHTML = panel('warn', 'The server is not responding', null,
+          `<p class="note">${esc(err.message)}</p>
        <p class="note" style="margin-top:8px">Check that <code>python run.py</code> is still running, and that Ollama is up.</p>`);
-  } finally {
-    goEl.disabled = false;
-    goEl.textContent = 'Ask';
-  }
-}
+      } finally {
+        goEl.disabled = false;
+        goEl.textContent = 'Ask';
+      }
+    }
 
-goEl.addEventListener('click', ask);
-qEl.addEventListener('keydown', e => { if(e.key === 'Enter') ask(); });
-qEl.focus();
-</script>
+    goEl.addEventListener('click', ask);
+    qEl.addEventListener('keydown', e => { if (e.key === 'Enter') ask(); });
+    qEl.focus();
+  </script>
 </body>
+
 </html>
