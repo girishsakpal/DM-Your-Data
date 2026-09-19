@@ -24,6 +24,26 @@ python run.py
 ```
 Then open `http://localhost:5000`.
 
+## Numerical Dataset: Employees Data
+
+### Sample questions to query
+1. Find the average salary of employees who work remotely and have a performance rating greater than 3.
+2. Find employees whose salary is greater than the average salary of their own department.
+3. Calculate the average salary for each performance category.
+4. Find the top 3 highest-paid employees in every city.
+5. For each department, find the employee who has the highest salary among employees with a performance rating ≥ 4.
+6. Find the percentage of employees in each city who are both remote workers and high performers.
+
+## Textual Dataset: IMBD movie rating
+
+### Sample questions to query
+1. Find the percentage of reviews that are positive.
+2. Find the longest review in the dataset.
+3. Find reviews that contain both positive and negative expressions, such as "good" and "bad".
+4. For each sentiment, calculate: Total reviews, Average length, Minimum length, Maximum length and Percentage of total reviews
+5. Find reviews longer than the average review length of all reviews.
+
+
 ## Project Structure
 
 ```
