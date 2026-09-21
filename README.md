@@ -4,25 +4,21 @@ A hybrid RAG system for querying tabular data in natural language that combines
 LLM-generated SQL (precise aggregations, PostgreSQL) with vector-based semantic
 search (pgvector) for conceptual queries.
 
-### Pull local LLMs via Ollama
+## Getting Started
 
 ```bash
-ollama pull llama3.2:3b        
-ollama pull qwen2.5-coder:3b
+git clone https://github.com/<your-username>/dm-your-data.git
+cd dm-your-data
 ```
 
-### Verify everything is wired up
+## Demo
 
-```bash
-python scripts/test_connection.py
-```
+Recorded output for both datasets is in the [`output/`](./output) folder.
 
-### Run the app:
-
-```bash
-python run.py
-```
-Then open `http://localhost:5000`.
+| Dataset | Video |
+|---|---|
+| Numerical (Employees data) | [`DM Your Data - Numerical Output.mp4`](./output/DM_Your_Data_Numerical_Output.mp4) |
+| Textual (IMDB movie reviews) | [`DM Your Data - Textual Output.mp4`](./output/DM_Your_Data_Textual_Output.mp4) |
 
 ## Numerical Dataset: Employees Data
 
@@ -89,6 +85,7 @@ dm-your-data/
 ├── tests/
 │   └── eval_dataset.json     # labeled test cases (sql/semantic/hybrid) with expected answers
 ├── data/                  # place datasets here - also holds generated profile_report.json / outlier_report.json / eval_runs/ / eval_history.csv
+├── output/                # recorded demo videos (numerical + textual dataset runs)
 ├── requirements.txt
 ├── .env.example
 └── run.py
